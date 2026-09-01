@@ -63,6 +63,12 @@ internal class Controller(internal val bridge: SharedBridge) {
     internal val isKilled: Boolean
         get() = mutex.isLocked
 
+    // Отметки стадий в журнале: без них видно только суммарное время подъёма
+    // туннеля и непонятно, где именно оно тратится.
+    private suspend fun reportStage(stage: String) {
+        bridge.service.logWriter?.report("stage: $stage")
+    }
+
     private fun attachHandler() {
         bridge.handler = CoroutineExceptionHandler { _, throwable ->
             kill(isReconnectionEnabled) {
@@ -93,6 +99,8 @@ internal class Controller(internal val bridge: SharedBridge) {
             }
 
 
+            reportStage("SSL ready")
+
             SstpClient(bridge).also {
                 sstpClient = it
                 incomingManager!!.registerMailbox(it)
@@ -104,6 +112,8 @@ internal class Controller(internal val bridge: SharedBridge) {
 
                 sstpClient!!.launchJobControl()
             }
+
+            reportStage("SSTP request accepted")
 
 
             PPPClient(bridge).also {
@@ -124,6 +134,7 @@ internal class Controller(internal val bridge: SharedBridge) {
                 incomingManager!!.unregisterMailbox(it)
             }
 
+            reportStage("LCP done")
 
             val authTimeout = getIntPrefValue(OscPrefKey.PPP_AUTH_TIMEOUT, bridge.prefs) * 1000L
             when (bridge.currentAuth) {
@@ -162,6 +173,8 @@ internal class Controller(internal val bridge: SharedBridge) {
             }
 
 
+            reportStage("auth done")
+
             sstpClient!!.sendCallConnected()
 
 
@@ -193,10 +206,14 @@ internal class Controller(internal val bridge: SharedBridge) {
             }
 
 
+            reportStage("IP negotiation done")
+
             bridge.ipTerminal!!.initialize()
             if (!expectProceeded(Where.IP, null)) {
                 return@launch
             }
+
+            reportStage("tun established")
 
 
             OutgoingManager(bridge).also {

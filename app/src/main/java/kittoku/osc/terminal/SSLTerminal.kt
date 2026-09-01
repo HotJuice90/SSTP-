@@ -194,6 +194,8 @@ internal class SSLTerminal(private val bridge: SharedBridge) {
                 bridge.service.cacheAddress(socketHostname, address)
             }
 
+            bridge.service.logWriter?.report("stage: socket connected")
+
             socketInputStream = it.getInputStream()
             socketOutputStream = it.getOutputStream()
         }
@@ -221,6 +223,8 @@ internal class SSLTerminal(private val bridge: SharedBridge) {
                 throw e
             }
         }
+
+        bridge.service.logWriter?.report("stage: TLS handshake done")
 
         if (getBooleanPrefValue(OscPrefKey.SSL_DO_VERIFY, bridge.prefs)) {
             HttpsURLConnection.getDefaultHostnameVerifier().also {
@@ -348,6 +352,7 @@ internal class SSLTerminal(private val bridge: SharedBridge) {
 
 
         socket!!.soTimeout = 1_000
+        bridge.service.logWriter?.report("stage: HTTP negotiated")
         return true
     }
 

@@ -173,8 +173,11 @@ internal class SstpVpnService : VpnService() {
     }
 
     private fun prepareLogWriter() {
-        val currentDateTime = SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault()).format(Date())
-        val filename = "log_osc_${currentDateTime}.txt"
+        // Имя по дате, а не по времени: файл открывается на дозапись, поэтому все
+        // подключения за сутки ложатся в один журнал. Раньше каждое нажатие
+        // «Подключиться» плодило отдельный файл.
+        val currentDate = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(Date())
+        val filename = "log_sstp_${currentDate}.txt"
 
         val prefURI = getURIPrefValue(OscPrefKey.LOG_DIR, prefs)
         if (prefURI == null) {
@@ -197,7 +200,7 @@ internal class SstpVpnService : VpnService() {
                 return
             }
 
-            val fileURI = dirURI.createFile("text/plain", filename)
+            val fileURI = dirURI.findFile(filename) ?: dirURI.createFile("text/plain", filename)
             if (fileURI == null) {
                 notifyError("LOG: ERR_NULL_FILE")
                 return
