@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -32,7 +33,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
@@ -201,19 +201,17 @@ private fun Hero(
             shape = CircleShape,
             colors = ButtonDefaults.buttonColors(
                 containerColor = if (isActive) {
-                    MaterialTheme.colorScheme.surfaceVariant
+                    MaterialTheme.colorScheme.onSurface
                 } else {
                     MaterialTheme.colorScheme.primary
                 },
                 contentColor = if (isActive) {
-                    MaterialTheme.colorScheme.onSurface
+                    MaterialTheme.colorScheme.surface
                 } else {
                     MaterialTheme.colorScheme.onPrimary
                 },
             ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(54.dp),
+            contentPadding = PaddingValues(horizontal = 28.dp, vertical = 16.dp),
         ) {
             Icon(
                 imageVector = Icons.Filled.PowerSettingsNew,
@@ -450,19 +448,12 @@ private fun ExclusionsCard(prefs: PrefsRepository, onOpenApps: () -> Unit) {
                 .clickable(onClick = onOpenApps)
                 .padding(16.dp),
         ) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.CallSplit,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(20.dp),
-                )
-            }
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.CallSplit,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(24.dp),
+            )
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -484,11 +475,6 @@ private fun ExclusionsCard(prefs: PrefsRepository, onOpenApps: () -> Unit) {
 
             Switch(
                 checked = isEnabled,
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = MaterialTheme.colorScheme.surface,
-                    checkedTrackColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    checkedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                ),
                 onCheckedChange = {
                     // Карточка про исключения, поэтому режим списка задаём явно:
                     // в туннель идёт всё, кроме отмеченного.
@@ -561,7 +547,10 @@ private fun InfoCell(
     value: String,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier.padding(horizontal = 8.dp)) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+        modifier = modifier.padding(horizontal = 8.dp),
+    ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp),
