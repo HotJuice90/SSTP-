@@ -12,6 +12,7 @@ import android.content.pm.PackageManager
 import android.net.Network
 import android.net.VpnService
 import android.os.Build
+import android.os.SystemClock
 import android.service.quicksettings.TileService
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
@@ -74,6 +75,10 @@ internal class SstpVpnService : VpnService() {
     // соединение в течение минуты после того, как связь вернётся.
     private val backoffSeconds = intArrayOf(1, 2, 4, 8, 15, 30, 60)
     private var reconnectAttempt = 0
+
+    // Смена сети — не отказ сервера: ждать перед первой попыткой незачем.
+    private var isImmediateReconnectRequested = false
+    private var reconnectStartedAt = 0L
 
     // Резолв имени сервера кэшируется: во время реконнекта tun ещё может быть жив,
     // и тогда DNS указывает на недостижимый роутер.
@@ -165,38 +170,59 @@ internal class SstpVpnService : VpnService() {
             return
         }
 
-        val dirURI = DocumentFile.fromTreeUri(this, prefURI)
-        if (dirURI == null) {
-            notifyError("LOG: ERR_NULL_DIRECTORY")
-            return
-        }
+        // Доступ к выбранному каталогу мог не пережить перезагрузку или отзыв
+        // прав, поэтому причина отказа сообщается явно: иначе «файл просто не
+        // создаётся» и понять, что пошло не так, невозможно.
+        try {
+            val dirURI = DocumentFile.fromTreeUri(this, prefURI)
+            if (dirURI == null) {
+                notifyError("LOG: ERR_NULL_DIRECTORY")
+                return
+            }
 
-        val fileURI = dirURI.createFile("text/plain", filename)
-        if (fileURI == null) {
-            notifyError("LOG: ERR_NULL_FILE")
-            return
-        }
+            if (!dirURI.canWrite()) {
+                notifyError("LOG: ERR_NO_PERMISSION (выбери папку заново)")
+                return
+            }
 
-        val stream = contentResolver.openOutputStream(fileURI.uri, "wa")
-        if (stream == null) {
-            notifyError("LOG: ERR_NULL_STREAM")
-            return
-        }
+            val fileURI = dirURI.createFile("text/plain", filename)
+            if (fileURI == null) {
+                notifyError("LOG: ERR_NULL_FILE")
+                return
+            }
 
-        logWriter = LogWriter(stream)
+            // Не каждый провайдер SAF умеет режим дозаписи.
+            val stream = contentResolver.openOutputStream(fileURI.uri, "wa")
+                ?: contentResolver.openOutputStream(fileURI.uri, "w")
+            if (stream == null) {
+                notifyError("LOG: ERR_NULL_STREAM")
+                return
+            }
+
+            logWriter = LogWriter(stream)
+        } catch (e: Exception) {
+            notifyError("LOG: ${e.javaClass.simpleName}")
+        }
     }
 
     internal fun launchJobReconnect() {
         jobReconnect = scope.launch {
             try {
-                val delaySec = backoffSeconds[minOf(reconnectAttempt, backoffSeconds.lastIndex)]
-                reconnectAttempt++
+                val isImmediate = isImmediateReconnectRequested
+                isImmediateReconnectRequested = false
 
-                val message = "Reconnecting in ${delaySec}s (attempt $reconnectAttempt)"
-                notifyMessage(message, NOTIFICATION_RECONNECT_ID, NOTIFICATION_RECONNECT_CHANNEL)
-                logWriter?.report(message)
+                if (isImmediate) {
+                    logWriter?.report("Reconnecting now")
+                } else {
+                    val delaySec = backoffSeconds[minOf(reconnectAttempt, backoffSeconds.lastIndex)]
+                    reconnectAttempt++
 
-                delay(delaySec * 1000L)
+                    val message = "Reconnecting in ${delaySec}s (attempt $reconnectAttempt)"
+                    notifyMessage(message, NOTIFICATION_RECONNECT_ID, NOTIFICATION_RECONNECT_CHANNEL)
+                    logWriter?.report(message)
+
+                    delay(delaySec * 1000L)
+                }
 
                 initializeClient()
             } catch (_: CancellationException) { }
@@ -210,6 +236,17 @@ internal class SstpVpnService : VpnService() {
     // начинать отсчёт пауз заново, а не с того места, где закончился прошлый.
     internal fun onConnected() {
         reconnectAttempt = 0
+
+        reconnectStartedAt.also {
+            if (it > 0L) {
+                reconnectStartedAt = 0L
+
+                val elapsed = SystemClock.elapsedRealtime() - it
+                scope.launch {
+                    logWriter?.report("Tunnel is up ${elapsed}ms after network change")
+                }
+            }
+        }
     }
 
     private fun startNetworkObserver() {
@@ -232,11 +269,14 @@ internal class SstpVpnService : VpnService() {
 
         if (!getBooleanPrefValue(OscPrefKey.RECONNECTION_ENABLED, prefs)) return
 
+        reconnectStartedAt = SystemClock.elapsedRealtime()
+
         scope.launch {
             logWriter?.report("Underlying network changed")
 
             jobReconnect?.cancelAndJoin()
             reconnectAttempt = 0 // новая сеть — backoff с нуля
+            isImmediateReconnectRequested = true
 
             val currentController = controller
             if (currentController != null && !currentController.isKilled) {

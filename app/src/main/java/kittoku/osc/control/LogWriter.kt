@@ -18,6 +18,10 @@ internal class LogWriter(logOutput: OutputStream) {
     internal fun write(message: String) {
         // use directly if it's cannot be race condition, like onCreate and onDestroy
         outputStream.write("[$currentTime] $message\n".toByteArray(Charsets.UTF_8))
+
+        // Без flush() запись оседает в буфере до close(), то есть до отключения
+        // VPN, и лог нельзя прочитать в тот момент, когда он нужен.
+        outputStream.flush()
     }
 
     internal suspend fun report(message: String) {

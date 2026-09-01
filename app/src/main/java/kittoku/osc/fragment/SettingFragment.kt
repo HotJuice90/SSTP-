@@ -38,8 +38,10 @@ internal class SettingFragment : PreferenceFragmentCompat() {
 
     private val logDirLauncher = registerForActivityResult(StartActivityForResult()) { result ->
         val uri = if (result.resultCode == Activity.RESULT_OK) result.data?.data?.also {
+            // Права нужны и на чтение: DocumentFile обходит дерево каталога,
+            // прежде чем создать в нём файл.
             requireContext().contentResolver.takePersistableUriPermission(
-                it, Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                it, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
             )
         } else null
 
@@ -79,7 +81,7 @@ internal class SettingFragment : PreferenceFragmentCompat() {
     private fun setLogDirListener() {
         logDirPref.onPreferenceClickListener = Preference.OnPreferenceClickListener {
             Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).also {
-                it.flags = Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                it.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                 logDirLauncher.launch(it)
             }
 
