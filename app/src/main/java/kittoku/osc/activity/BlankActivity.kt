@@ -3,8 +3,8 @@ package kittoku.osc.activity
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import kittoku.osc.R
-import kittoku.osc.databinding.ActivityBlankBinding
+import home.keenetic.sstp.R
+import home.keenetic.sstp.databinding.ActivityBlankBinding
 import kittoku.osc.fragment.AppsFragment
 import kittoku.osc.fragment.ProfilesFragment
 import kittoku.osc.fragment.SaveCertFragment

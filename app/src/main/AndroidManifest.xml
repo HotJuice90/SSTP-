@@ -28,7 +28,7 @@
 
         <activity
             android:exported="true"
-            android:name=".activity.MainActivity">
+            android:name="kittoku.osc.activity.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -40,13 +40,13 @@
 
         <activity
             android:exported="false"
-            android:name=".activity.BlankActivity">
+            android:name="kittoku.osc.activity.BlankActivity">
         </activity>
 
         <service
             android:exported="true"
             android:foregroundServiceType="specialUse"
-            android:name=".service.SstpVpnService"
+            android:name="kittoku.osc.service.SstpVpnService"
             android:permission="android.permission.BIND_VPN_SERVICE">
             <intent-filter>
                 <action android:name="android.net.VpnService" />
@@ -55,7 +55,7 @@
 
         <service
             android:exported="true"
-            android:name=".service.SstpTileService"
+            android:name="kittoku.osc.service.SstpTileService"
             android:icon="@drawable/ic_baseline_vpn_lock_24"
             android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
             <intent-filter>

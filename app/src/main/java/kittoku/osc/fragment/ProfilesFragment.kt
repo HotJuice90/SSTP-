@@ -8,7 +8,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.preference.EditTextPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
-import kittoku.osc.R
+import home.keenetic.sstp.R
 import kittoku.osc.extension.removeTemporaryPreferences
 import kittoku.osc.preference.PROFILE_KEY_HEADER
 import kittoku.osc.preference.deserializeProfile

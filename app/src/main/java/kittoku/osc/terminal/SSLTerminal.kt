@@ -7,7 +7,7 @@ import android.util.Base64
 import androidx.core.app.NotificationCompat
 import androidx.documentfile.provider.DocumentFile
 import kittoku.osc.ControlMessage
-import kittoku.osc.R
+import home.keenetic.sstp.R
 import kittoku.osc.Result
 import kittoku.osc.SharedBridge
 import kittoku.osc.Where

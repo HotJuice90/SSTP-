@@ -7,7 +7,7 @@ import android.os.Bundle
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
-import kittoku.osc.R
+import home.keenetic.sstp.R
 import kittoku.osc.activity.BLANK_ACTIVITY_TYPE_APPS
 import kittoku.osc.activity.BlankActivity
 import kittoku.osc.activity.EXTRA_KEY_TYPE

@@ -17,7 +17,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.documentfile.provider.DocumentFile
 import androidx.preference.PreferenceManager
-import kittoku.osc.R
+import home.keenetic.sstp.R
 import kittoku.osc.SharedBridge
 import kittoku.osc.control.Controller
 import kittoku.osc.control.LogWriter

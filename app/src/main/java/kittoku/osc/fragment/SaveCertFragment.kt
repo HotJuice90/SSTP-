@@ -5,7 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.preference.PreferenceFragmentCompat
-import kittoku.osc.R
+import home.keenetic.sstp.R
 import kittoku.osc.activity.EXTRA_KEY_CERT
 import kittoku.osc.activity.EXTRA_KEY_FILENAME
 import java.io.BufferedOutputStream

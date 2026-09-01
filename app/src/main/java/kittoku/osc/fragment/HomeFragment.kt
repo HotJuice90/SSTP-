@@ -9,7 +9,7 @@ import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
-import kittoku.osc.R
+import home.keenetic.sstp.R
 import kittoku.osc.preference.OscPrefKey
 import kittoku.osc.preference.checkPreferences
 import kittoku.osc.preference.custom.HomeConnectorPreference

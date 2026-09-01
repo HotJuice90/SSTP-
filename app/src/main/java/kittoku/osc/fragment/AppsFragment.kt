@@ -9,7 +9,7 @@ import android.view.MenuItem
 import androidx.preference.CheckBoxPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
-import kittoku.osc.R
+import home.keenetic.sstp.R
 import kittoku.osc.extension.removeTemporaryPreferences
 import kittoku.osc.preference.OscPrefKey
 import kittoku.osc.preference.TEMP_KEY_HEADER

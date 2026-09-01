@@ -22,9 +22,9 @@ import androidx.preference.PreferenceManager
 import androidx.preference.forEach
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.google.android.material.tabs.TabLayoutMediator
-import kittoku.osc.BuildConfig
-import kittoku.osc.R
-import kittoku.osc.databinding.ActivityMainBinding
+import home.keenetic.sstp.BuildConfig
+import home.keenetic.sstp.R
+import home.keenetic.sstp.databinding.ActivityMainBinding
 import kittoku.osc.extension.firstEditText
 import kittoku.osc.extension.sum
 import kittoku.osc.fragment.HomeFragment
