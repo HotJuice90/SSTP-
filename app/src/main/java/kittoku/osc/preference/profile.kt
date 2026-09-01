@@ -21,6 +21,8 @@ private val EXCLUDED_BOOLEAN_PREFERENCES = arrayOf(
     OscPrefKey.ROOT_STATE,
     OscPrefKey.HOME_CONNECTOR,
     OscPrefKey.HOME_STATUS,
+    OscPrefKey.ROUTE_DO_ENABLE_APP_BASED_RULE,
+    OscPrefKey.ROUTE_DO_SHOW_BACKGROUND_APPS,
 )
 
 private val EXCLUDED_STRING_PREFERENCES = arrayOf(
@@ -28,6 +30,11 @@ private val EXCLUDED_STRING_PREFERENCES = arrayOf(
     OscPrefKey.HOME_STATE,
     OscPrefKey.HOME_CONNECTED_AT,
     OscPrefKey.HOME_ACTIVE_PROFILE,
+    OscPrefKey.ROUTE_APP_LIST_TYPE,
+)
+
+private val EXCLUDED_SET_PREFERENCES = arrayOf(
+    OscPrefKey.ROUTE_SELECTED_APPS,
 )
 
 @Serializable
@@ -55,7 +62,7 @@ internal fun buildProfile(prefs: SharedPreferences): Profile {
         profile.stringSetting[it.name] = getStringPrefValue(it, prefs)
     }
 
-    DEFAULT_SET_MAP.keys.forEach {
+    DEFAULT_SET_MAP.keys.filter { it !in EXCLUDED_SET_PREFERENCES }.forEach {
         profile.setSetting[it.name] = getSetPrefValue(it, prefs)
     }
 
@@ -96,7 +103,7 @@ internal fun importProfile(profile: Profile?, prefs: SharedPreferences) {
         setStringPrefValue(value, it, prefs)
     }
 
-    DEFAULT_SET_MAP.keys.forEach {
+    DEFAULT_SET_MAP.keys.filter { it !in EXCLUDED_SET_PREFERENCES }.forEach {
         val value = profile?.setSetting[it.name] ?: DEFAULT_SET_MAP.getValue(it)
 
         setSetPrefValue(value, it, prefs)
