@@ -150,7 +150,7 @@ private fun Hero(
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp),
-            modifier = Modifier.padding(top = 14.dp),
+            modifier = Modifier.padding(top = 12.dp),
         ) {
             Box(
                 modifier = Modifier
@@ -186,7 +186,6 @@ private fun Hero(
         ConnectionDiagram(
             isConnected = isConnected,
             isBusy = isBusy,
-            modifier = Modifier.padding(top = 6.dp),
         )
 
         if (isConnected) {

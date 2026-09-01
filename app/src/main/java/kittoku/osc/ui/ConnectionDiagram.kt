@@ -75,7 +75,7 @@ internal fun ConnectionDiagram(
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
-                .width(120.dp)
+                .width(140.dp)
                 .height(56.dp)
                 .drawBehind {
                     val y = size.height / 2
