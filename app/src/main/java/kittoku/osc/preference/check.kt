@@ -87,10 +87,6 @@ internal fun checkPreferences(prefs: SharedPreferences): String? {
         return "No custom DNS server address was given"
     }
 
-    getIntPrefValue(OscPrefKey.RECONNECTION_COUNT, prefs).also {
-        if (it < 1) return "Retry Count must be a positive integer"
-    }
-
     val doSaveLog = getBooleanPrefValue(OscPrefKey.LOG_DO_SAVE_LOG, prefs)
     val logDir = getURIPrefValue(OscPrefKey.LOG_DIR, prefs)
     if (doSaveLog && logDir == null) return "No log directory was selected"

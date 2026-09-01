@@ -46,9 +46,6 @@ internal enum class OscPrefKey {
     ROUTE_DO_SHOW_BACKGROUND_APPS,
     ROUTE_SELECTED_APPS,
     RECONNECTION_ENABLED,
-    RECONNECTION_COUNT,
-    RECONNECTION_INTERVAL,
-    RECONNECTION_LIFE,
     LOG_DO_SAVE_LOG,
     LOG_DIR,
 }
@@ -82,9 +79,6 @@ internal val DEFAULT_INT_MAP = mapOf(
     OscPrefKey.PPP_MRU to DEFAULT_MRU,
     OscPrefKey.PPP_MTU to DEFAULT_MTU,
     OscPrefKey.PPP_AUTH_TIMEOUT to 3,
-    OscPrefKey.RECONNECTION_COUNT to 3,
-    OscPrefKey.RECONNECTION_INTERVAL to 10,
-    OscPrefKey.RECONNECTION_LIFE to 0
 )
 
 private const val EMPTY_TEXT = ""

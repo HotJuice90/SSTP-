@@ -54,8 +54,6 @@
 
     <PreferenceCategory android:title="Reconnection">
         <kittoku.osc.preference.custom.ReconnectionEnabledPreference android:key="RECONNECTION_ENABLED"/>
-        <kittoku.osc.preference.custom.ReconnectionCountPreference android:key="RECONNECTION_COUNT"/>
-        <kittoku.osc.preference.custom.ReconnectionIntervalPreference android:key="RECONNECTION_INTERVAL"/>
     </PreferenceCategory>
 
     <PreferenceCategory android:title="Log">

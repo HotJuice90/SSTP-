@@ -16,8 +16,3 @@ internal fun setIntPrefValue(value: Int, key: OscPrefKey, prefs: SharedPreferenc
     }
 }
 
-internal fun resetReconnectionLife(prefs: SharedPreferences) {
-    getIntPrefValue(OscPrefKey.RECONNECTION_COUNT, prefs).also {
-        setIntPrefValue(it, OscPrefKey.RECONNECTION_LIFE, prefs)
-    }
-}

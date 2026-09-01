@@ -9,6 +9,7 @@ import android.content.ComponentName
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
+import android.net.Network
 import android.net.VpnService
 import android.os.Build
 import android.service.quicksettings.TileService
@@ -21,13 +22,11 @@ import home.keenetic.sstp.R
 import kittoku.osc.SharedBridge
 import kittoku.osc.control.Controller
 import kittoku.osc.control.LogWriter
+import kittoku.osc.control.UnderlyingNetworkObserver
 import kittoku.osc.preference.OscPrefKey
 import kittoku.osc.preference.accessor.getBooleanPrefValue
-import kittoku.osc.preference.accessor.getIntPrefValue
 import kittoku.osc.preference.accessor.getURIPrefValue
-import kittoku.osc.preference.accessor.resetReconnectionLife
 import kittoku.osc.preference.accessor.setBooleanPrefValue
-import kittoku.osc.preference.accessor.setIntPrefValue
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -38,6 +37,7 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import java.net.InetAddress
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -67,6 +67,18 @@ internal class SstpVpnService : VpnService() {
     private var controller: Controller?  = null
 
     private var jobReconnect: Job? = null
+    private var networkObserver: UnderlyingNetworkObserver? = null
+
+    // Пауза перед попыткой переподключения, в секундах. Дальше последнего элемента
+    // не растёт: сервер может быть недоступен часами, а телефон должен подхватить
+    // соединение в течение минуты после того, как связь вернётся.
+    private val backoffSeconds = intArrayOf(1, 2, 4, 8, 15, 30, 60)
+    private var reconnectAttempt = 0
+
+    // Резолв имени сервера кэшируется: во время реконнекта tun ещё может быть жив,
+    // и тогда DNS указывает на недостижимый роутер.
+    private var cachedHostname: String? = null
+    private var cachedAddress: InetAddress? = null
 
     private fun setRootState(state: Boolean) {
         setBooleanPrefValue(state, OscPrefKey.ROOT_STATE, prefs)
@@ -105,7 +117,8 @@ internal class SstpVpnService : VpnService() {
                 controller?.kill(false, null)
 
                 beForegrounded()
-                resetReconnectionLife(prefs)
+                reconnectAttempt = 0
+                invalidateAddressCache()
                 if (getBooleanPrefValue(OscPrefKey.LOG_DO_SAVE_LOG, prefs)) {
                     prepareLogWriter()
                 }
@@ -113,6 +126,7 @@ internal class SstpVpnService : VpnService() {
                 logWriter?.write("Establish VPN connection")
 
                 initializeClient()
+                startNetworkObserver()
 
                 setRootState(true)
 
@@ -120,6 +134,8 @@ internal class SstpVpnService : VpnService() {
             }
 
             else -> {
+                stopNetworkObserver()
+
                 // ensure that reconnection has been completely canceled or done
                 runBlocking { jobReconnect?.cancelAndJoin() }
 
@@ -173,16 +189,14 @@ internal class SstpVpnService : VpnService() {
     internal fun launchJobReconnect() {
         jobReconnect = scope.launch {
             try {
-                getIntPrefValue(OscPrefKey.RECONNECTION_LIFE, prefs).also {
-                    val life = it - 1
-                    setIntPrefValue(life, OscPrefKey.RECONNECTION_LIFE, prefs)
+                val delaySec = backoffSeconds[minOf(reconnectAttempt, backoffSeconds.lastIndex)]
+                reconnectAttempt++
 
-                    val message = "Reconnection will be tried (LIFE = $life)"
-                    notifyMessage(message, NOTIFICATION_RECONNECT_ID, NOTIFICATION_RECONNECT_CHANNEL)
-                    logWriter?.report(message)
-                }
+                val message = "Reconnecting in ${delaySec}s (attempt $reconnectAttempt)"
+                notifyMessage(message, NOTIFICATION_RECONNECT_ID, NOTIFICATION_RECONNECT_CHANNEL)
+                logWriter?.report(message)
 
-                delay(getIntPrefValue(OscPrefKey.RECONNECTION_INTERVAL, prefs) * 1000L)
+                delay(delaySec * 1000L)
 
                 initializeClient()
             } catch (_: CancellationException) { }
@@ -190,6 +204,63 @@ internal class SstpVpnService : VpnService() {
                 cancelNotification(NOTIFICATION_RECONNECT_ID)
             }
         }
+    }
+
+    // Вызывается контроллером, когда туннель поднялся: следующий разрыв должен
+    // начинать отсчёт пауз заново, а не с того места, где закончился прошлый.
+    internal fun onConnected() {
+        reconnectAttempt = 0
+    }
+
+    private fun startNetworkObserver() {
+        if (networkObserver != null) return
+
+        networkObserver = UnderlyingNetworkObserver(this) { network ->
+            onUnderlyingNetworkChanged(network)
+        }.also { it.start() }
+    }
+
+    private fun stopNetworkObserver() {
+        networkObserver?.close()
+        networkObserver = null
+    }
+
+    private fun onUnderlyingNetworkChanged(network: Network?) {
+        if (network == null) return // сети нет — ждём появления, дёргаться незачем
+
+        setUnderlyingNetworks(arrayOf(network))
+
+        if (!getBooleanPrefValue(OscPrefKey.RECONNECTION_ENABLED, prefs)) return
+
+        scope.launch {
+            logWriter?.report("Underlying network changed")
+
+            jobReconnect?.cancelAndJoin()
+            reconnectAttempt = 0 // новая сеть — backoff с нуля
+
+            val currentController = controller
+            if (currentController != null && !currentController.isKilled) {
+                currentController.kill(true, null) // сам вызовет launchJobReconnect()
+            } else {
+                // Соединение уже умерло само, и его вызов launchJobReconnect()
+                // мы только что отменили — планируем попытку заново.
+                launchJobReconnect()
+            }
+        }
+    }
+
+    internal fun cachedAddressFor(hostname: String): InetAddress? {
+        return if (hostname == cachedHostname) cachedAddress else null
+    }
+
+    internal fun cacheAddress(hostname: String, address: InetAddress) {
+        cachedHostname = hostname
+        cachedAddress = address
+    }
+
+    internal fun invalidateAddressCache() {
+        cachedHostname = null
+        cachedAddress = null
     }
 
     private fun beForegrounded() {
@@ -259,6 +330,8 @@ internal class SstpVpnService : VpnService() {
     }
 
     override fun onDestroy() {
+        stopNetworkObserver()
+
         logWriter?.write("Terminate VPN connection")
         logWriter?.close()
         logWriter = null

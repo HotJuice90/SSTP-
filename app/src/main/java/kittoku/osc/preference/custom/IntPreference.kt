@@ -40,14 +40,3 @@ internal class PPPAuthTimeoutPreference(context: Context, attrs: AttributeSet) :
     override val preferenceTitle = "Timeout Period (second)"
 }
 
-internal class ReconnectionCountPreference(context: Context, attrs: AttributeSet) : IntPreference(context, attrs) {
-    override val oscPrefKey = OscPrefKey.RECONNECTION_COUNT
-    override val parentKey = OscPrefKey.RECONNECTION_ENABLED
-    override val preferenceTitle = "Retry Count"
-}
-
-internal class ReconnectionIntervalPreference(context: Context, attrs: AttributeSet) : IntPreference(context, attrs) {
-    override val oscPrefKey = OscPrefKey.RECONNECTION_INTERVAL
-    override val parentKey = OscPrefKey.RECONNECTION_ENABLED
-    override val preferenceTitle = "Retry Interval (second)"
-}

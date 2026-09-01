@@ -25,7 +25,6 @@ import kittoku.osc.preference.AUTH_PROTOCOl_PAP
 import kittoku.osc.preference.OscPrefKey
 import kittoku.osc.preference.accessor.getBooleanPrefValue
 import kittoku.osc.preference.accessor.getIntPrefValue
-import kittoku.osc.preference.accessor.resetReconnectionLife
 import kittoku.osc.terminal.SSL_REQUEST_INTERVAL
 import kittoku.osc.unit.sstp.SSTP_MESSAGE_TYPE_CALL_ABORT
 import kittoku.osc.unit.sstp.SSTP_MESSAGE_TYPE_CALL_DISCONNECT
@@ -57,8 +56,12 @@ internal class Controller(internal val bridge: SharedBridge) {
     private val mutex = Mutex()
 
     private val isReconnectionEnabled = getBooleanPrefValue(OscPrefKey.RECONNECTION_ENABLED, bridge.prefs)
-    private val isReconnectionAvailable: Boolean
-        get() = getIntPrefValue(OscPrefKey.RECONNECTION_LIFE, bridge.prefs) > 0
+
+    // kill() отрабатывает ровно один раз на экземпляр: mutex захватывается и не
+    // отпускается. Сервису нужно знать, живой ли контроллер, чтобы не ждать от
+    // мертвеца планирования реконнекта.
+    internal val isKilled: Boolean
+        get() = mutex.isLocked
 
     private fun attachHandler() {
         bridge.handler = CoroutineExceptionHandler { _, throwable ->
@@ -204,9 +207,7 @@ internal class Controller(internal val bridge: SharedBridge) {
 
             observer = NetworkObserver(bridge)
 
-            if (isReconnectionEnabled) {
-                resetReconnectionLife(bridge.prefs)
-            }
+            bridge.service.onConnected()
 
 
             expectProceeded(Where.SSTP_CONTROL, null) // wait ERR_ message until disconnection
@@ -269,7 +270,7 @@ internal class Controller(internal val bridge: SharedBridge) {
 
             closeTerminals()
 
-            if (isReconnectionRequested && isReconnectionAvailable) {
+            if (isReconnectionRequested) {
                 bridge.service.launchJobReconnect()
             } else {
                 bridge.service.close()

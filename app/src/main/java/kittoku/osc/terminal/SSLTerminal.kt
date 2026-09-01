@@ -35,6 +35,8 @@ import kotlinx.coroutines.yield
 import java.io.BufferedInputStream
 import java.io.InputStream
 import java.io.OutputStream
+import java.io.IOException
+import java.net.InetSocketAddress
 import java.net.Socket
 import java.net.SocketTimeoutException
 import java.nio.ByteBuffer
@@ -58,6 +60,7 @@ private const val HTTP_DELIMITER = "\r\n"
 private const val HTTP_SUFFIX = "\r\n\r\n"
 
 internal const val SSL_REQUEST_INTERVAL = 10_000L
+private const val SOCKET_CONNECT_TIMEOUT = 10_000
 
 internal class SSLTerminal(private val bridge: SharedBridge) {
     private val mutex = Mutex()
@@ -160,7 +163,37 @@ internal class SSLTerminal(private val bridge: SharedBridge) {
 
         val socketHostname = if (doUseProxy) getStringPrefValue(OscPrefKey.PROXY_HOSTNAME, bridge.prefs) else sslHostname
         val socketPort = if (doUseProxy) getIntPrefValue(OscPrefKey.PROXY_PORT, bridge.prefs) else sslPort
-        socket = Socket(socketHostname, socketPort).also {
+        socket = Socket().also {
+            // protect() до connect(). Раньше сокет выводился из туннеля уже после
+            // HTTP-негоциации, и это работало только потому, что tun поднимался позже.
+            // При быстром реконнекте старый интерфейс ещё жив, и маршрут 0.0.0.0/0
+            // заворачивает сам TLS-сокет в туннель — петля без внятной ошибки.
+            // bind() нужен, чтобы у сокета появился дескриптор: защищать нечего,
+            // пока он не создан.
+            it.bind(InetSocketAddress(0))
+            if (!bridge.service.protect(it)) {
+                bridge.service.logWriter?.report("SSL: ERR_PROTECT_FAILED")
+            }
+
+            val cachedAddress = bridge.service.cachedAddressFor(socketHostname)
+            val endpoint = if (cachedAddress != null) {
+                InetSocketAddress(cachedAddress, socketPort)
+            } else {
+                InetSocketAddress(socketHostname, socketPort)
+            }
+
+            try {
+                it.connect(endpoint, SOCKET_CONNECT_TIMEOUT)
+            } catch (e: IOException) {
+                // Кэш мог протухнуть — следующая попытка пойдёт по имени.
+                bridge.service.invalidateAddressCache()
+                throw e
+            }
+
+            it.inetAddress?.also { address ->
+                bridge.service.cacheAddress(socketHostname, address)
+            }
+
             socketInputStream = it.getInputStream()
             socketOutputStream = it.getOutputStream()
         }
@@ -315,7 +348,6 @@ internal class SSLTerminal(private val bridge: SharedBridge) {
 
 
         socket!!.soTimeout = 1_000
-        bridge.service.protect(socket)
         return true
     }
 
