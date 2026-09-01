@@ -16,8 +16,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 
 
-private const val PPP_REQUEST_INTERVAL = 3000L
-private const val PPP_REQUEST_COUNT = 10
+// Keenetic стабильно не отвечает на первый Configure-Request, и раньше повтор
+// уходил только через 3 секунды: LCP и IPCP отъедали по 4 секунды каждый.
+// Счётчик увеличен так, чтобы суммарный потолок ожидания остался 30 секунд.
+private const val PPP_REQUEST_INTERVAL = 1000L
+private const val PPP_REQUEST_COUNT = 30
 internal const val PPP_NEGOTIATION_TIMEOUT = PPP_REQUEST_INTERVAL * PPP_REQUEST_COUNT
 
 
