@@ -75,7 +75,7 @@ internal fun ConnectionDiagram(
             contentAlignment = Alignment.Center,
             modifier = Modifier
                 .weight(1f)
-                .height(72.dp)
+                .height(56.dp)
                 .drawBehind {
                     val y = size.height / 2
                     val start = Offset(0f, y)
@@ -154,7 +154,7 @@ private fun DiagramNode(isActive: Boolean, content: @Composable () -> Unit) {
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
-            .size(72.dp)
+            .size(56.dp)
             .background(MaterialTheme.colorScheme.surface, CircleShape)
             .border(
                 width = 1.dp,
@@ -165,7 +165,7 @@ private fun DiagramNode(isActive: Boolean, content: @Composable () -> Unit) {
                 },
                 shape = CircleShape,
             )
-            .padding(16.dp),
+            .padding(14.dp),
     ) {
         content()
     }

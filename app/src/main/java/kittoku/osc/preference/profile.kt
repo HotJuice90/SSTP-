@@ -39,7 +39,7 @@ internal class Profile() {
     internal val uriSetting = mutableMapOf<String, String>()
 }
 
-internal fun serializeProfile(prefs: SharedPreferences): String {
+internal fun buildProfile(prefs: SharedPreferences): Profile {
     val profile = Profile()
 
     DEFAULT_BOOLEAN_MAP.keys.filter { it !in EXCLUDED_BOOLEAN_PREFERENCES }.forEach {
@@ -65,8 +65,12 @@ internal fun serializeProfile(prefs: SharedPreferences): String {
         }
     }
 
-    return Json.encodeToString(profile)
+    return profile
 }
+
+internal fun encodeProfile(profile: Profile): String = Json.encodeToString(profile)
+
+internal fun serializeProfile(prefs: SharedPreferences): String = encodeProfile(buildProfile(prefs))
 
 internal fun deserializeProfile(serialized: String): Profile? {
     return try {

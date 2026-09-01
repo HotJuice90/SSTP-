@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -20,20 +21,18 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Dns
-import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.PowerSettingsNew
+import androidx.compose.material.icons.filled.Public
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Shield
-import androidx.compose.material.icons.filled.Timer
-import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.NetworkPing
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
@@ -49,6 +48,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import home.keenetic.sstp.R
+import kittoku.osc.preference.LIST_TYPE_DISALLOWED
 import kittoku.osc.preference.OscPrefKey
 import kittoku.osc.preference.STATE_CONNECTED
 import kittoku.osc.preference.STATE_CONNECTING
@@ -66,22 +66,22 @@ internal fun HomeScreen(
     onConnect: () -> Unit,
     onDisconnect: () -> Unit,
     onOpenProfiles: () -> Unit,
+    onCreateProfile: () -> Unit,
     onOpenApps: () -> Unit,
     onOpenDetails: () -> Unit,
-    onOpenConnection: () -> Unit,
 ) {
     val isConnected = state == STATE_CONNECTED
     val isBusy = state == STATE_CONNECTING || state == STATE_RECONNECTING
 
     val activeProfile by prefs.stringState(OscPrefKey.HOME_ACTIVE_PROFILE)
-    val title = activeProfile.ifEmpty { hostname }.ifEmpty { stringResource(R.string.no_host) }
 
     Column(
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp),
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
     ) {
-        ConnectionCard(
-            title = title,
+        Hero(
+            name = activeProfile.ifEmpty { hostname }.ifEmpty { stringResource(R.string.no_host) },
+            hostname = if (activeProfile.isEmpty()) "" else hostname,
             state = state,
             isConnected = isConnected,
             isBusy = isBusy,
@@ -95,9 +95,10 @@ internal fun HomeScreen(
             prefs = prefs,
             activeProfile = activeProfile,
             onOpenProfiles = onOpenProfiles,
+            onCreateProfile = onCreateProfile,
         )
 
-        SplitTunnelingCard(
+        ExclusionsCard(
             prefs = prefs,
             isConnected = isConnected,
             onOpenApps = onOpenApps,
@@ -105,22 +106,14 @@ internal fun HomeScreen(
 
         if (isConnected) {
             InfoStrip(status = status, onOpenDetails = onOpenDetails)
-        } else {
-            TipCard(
-                text = if (hostname.isEmpty()) {
-                    stringResource(R.string.tip_no_server)
-                } else {
-                    stringResource(R.string.tip_connect, title)
-                },
-                onClick = if (hostname.isEmpty()) onOpenConnection else null,
-            )
         }
     }
 }
 
 @Composable
-private fun ConnectionCard(
-    title: String,
+private fun Hero(
+    name: String,
+    hostname: String,
     state: String,
     isConnected: Boolean,
     isBusy: Boolean,
@@ -129,83 +122,94 @@ private fun ConnectionCard(
     onConnect: () -> Unit,
     onDisconnect: () -> Unit,
 ) {
-    SurfaceCard {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 24.dp),
-        ) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+        modifier = Modifier.padding(top = 8.dp),
+    ) {
+        Text(
+            text = name,
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+        )
+
+        if (hostname.isNotEmpty()) {
             Text(
-                text = title,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
+                text = hostname,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.padding(top = 2.dp),
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(7.dp)
+                    .background(
+                        color = when {
+                            isConnected -> MaterialTheme.colorScheme.primary
+                            isBusy -> MaterialTheme.colorScheme.tertiary
+                            else -> MaterialTheme.colorScheme.outline
+                        },
+                        shape = CircleShape,
+                    )
             )
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .background(
-                            color = when {
-                                isConnected -> MaterialTheme.colorScheme.primary
-                                isBusy -> MaterialTheme.colorScheme.tertiary
-                                else -> MaterialTheme.colorScheme.outline
-                            },
-                            shape = CircleShape,
-                        )
-                )
-
-                Text(
-                    text = stringResource(
-                        when (state) {
-                            STATE_CONNECTED -> R.string.state_connected
-                            STATE_CONNECTING -> R.string.state_connecting
-                            STATE_RECONNECTING -> R.string.state_reconnecting
-                            else -> R.string.state_disconnected
-                        }
-                    ),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = if (isConnected) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    },
-                )
-            }
-
-            ConnectionDiagram(isConnected = isConnected, isBusy = isBusy)
-
-            if (isConnected) {
-                SessionStats(connectedAt = connectedAt, pingTarget = pingTarget)
-            }
-
-            Button(
-                onClick = if (isConnected || isBusy) onDisconnect else onConnect,
-                shape = CircleShape,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
+            Text(
+                text = stringResource(
+                    when (state) {
+                        STATE_CONNECTED -> R.string.state_connected
+                        STATE_CONNECTING -> R.string.state_connecting
+                        STATE_RECONNECTING -> R.string.state_reconnecting
+                        else -> R.string.state_disconnected
+                    }
                 ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.PowerSettingsNew,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp),
-                )
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (isConnected) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+            )
+        }
 
-                Text(
-                    text = stringResource(
-                        if (isConnected || isBusy) R.string.action_disconnect else R.string.action_connect
-                    ),
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(start = 10.dp),
-                )
-            }
+        ConnectionDiagram(
+            isConnected = isConnected,
+            isBusy = isBusy,
+            modifier = Modifier.padding(vertical = 8.dp),
+        )
+
+        if (isConnected) {
+            SessionStats(connectedAt = connectedAt, pingTarget = pingTarget)
+        }
+
+        Spacer(modifier = Modifier.height(if (isConnected) 12.dp else 4.dp))
+
+        Button(
+            onClick = if (isConnected || isBusy) onDisconnect else onConnect,
+            shape = CircleShape,
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(54.dp),
+        ) {
+            Icon(
+                imageVector = Icons.Filled.PowerSettingsNew,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+            )
+
+            Text(
+                text = stringResource(
+                    if (isConnected || isBusy) R.string.action_disconnect else R.string.action_connect
+                ),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(start = 10.dp),
+            )
         }
     }
 }
@@ -225,22 +229,22 @@ private fun SessionStats(connectedAt: Long?, pingTarget: String?) {
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(20.dp),
+        modifier = Modifier.padding(top = 4.dp),
     ) {
         StatTile(
-            icon = Icons.Filled.Speed,
+            icon = Icons.Filled.NetworkPing,
             value = ping?.let { stringResource(R.string.stat_ping_value, it) } ?: "—",
             label = stringResource(R.string.stat_ping),
         )
 
         VerticalDivider(
-            modifier = Modifier.height(36.dp),
+            modifier = Modifier.height(28.dp),
             color = MaterialTheme.colorScheme.outlineVariant,
         )
 
         StatTile(
-            icon = Icons.Filled.Timer,
+            icon = Icons.Filled.Schedule,
             value = connectedAt?.let { formatUptime((now - it).coerceAtLeast(0)) } ?: "—",
             label = stringResource(R.string.stat_session),
         )
@@ -249,28 +253,30 @@ private fun SessionStats(connectedAt: Long?, pingTarget: String?) {
 
 @Composable
 private fun StatTile(icon: ImageVector, value: String, label: String) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(2.dp),
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(18.dp),
+            modifier = Modifier.size(20.dp),
         )
 
-        Text(
-            text = value,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-        )
+        Column {
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+            )
 
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
     }
 }
 
@@ -279,6 +285,7 @@ private fun ProfilesStrip(
     prefs: PrefsRepository,
     activeProfile: String,
     onOpenProfiles: () -> Unit,
+    onCreateProfile: () -> Unit,
 ) {
     // Список профилей лежит в тех же prefs под своим префиксом и меняется редко,
     // поэтому перечитываем его при каждой смене активного профиля.
@@ -326,7 +333,7 @@ private fun ProfilesStrip(
                 )
             }
 
-            AddProfileChip(onClick = onOpenProfiles)
+            AddProfileChip(onClick = onCreateProfile)
         }
     }
 }
@@ -379,14 +386,14 @@ private fun AddProfileChip(onClick: () -> Unit) {
     ) {
         Icon(
             imageVector = Icons.Filled.Add,
-            contentDescription = stringResource(R.string.profile_save),
+            contentDescription = stringResource(R.string.profile_new),
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
 
 @Composable
-private fun SplitTunnelingCard(
+private fun ExclusionsCard(
     prefs: PrefsRepository,
     isConnected: Boolean,
     onOpenApps: () -> Unit,
@@ -406,47 +413,43 @@ private fun SplitTunnelingCard(
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
-                        .size(44.dp)
+                        .size(40.dp)
                         .background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.CallSplit,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(22.dp),
+                        modifier = Modifier.size(20.dp),
                     )
                 }
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = stringResource(
-                            if (isEnabled) R.string.split_on_title else R.string.split_off_title
-                        ),
+                        text = stringResource(R.string.exclusions_title),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                     )
 
                     Text(
                         text = if (isEnabled) {
-                            stringResource(R.string.apps_selected_count, selected.size)
+                            stringResource(R.string.exclusions_on, selected.size)
                         } else {
-                            stringResource(R.string.split_off_summary)
+                            stringResource(R.string.exclusions_off)
                         },
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
 
-                Text(
-                    text = stringResource(if (isEnabled) R.string.split_on else R.string.split_off),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier
-                        .background(
-                            MaterialTheme.colorScheme.surfaceVariant,
-                            RoundedCornerShape(12.dp),
-                        )
-                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                Switch(
+                    checked = isEnabled,
+                    onCheckedChange = {
+                        // Карточка про исключения, поэтому режим списка задаём явно:
+                        // в туннель идёт всё, кроме отмеченного.
+                        prefs.setString(OscPrefKey.ROUTE_APP_LIST_TYPE, LIST_TYPE_DISALLOWED)
+                        prefs.setBoolean(OscPrefKey.ROUTE_DO_ENABLE_APP_BASED_RULE, it)
+                    },
                 )
             }
 
@@ -567,48 +570,12 @@ private fun InfoCell(
 }
 
 @Composable
-private fun TipCard(text: String, onClick: (() -> Unit)?) {
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
-    ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.padding(16.dp),
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Lightbulb,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-            )
-
-            Column {
-                Text(
-                    text = stringResource(R.string.tip_title),
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                )
-
-                Text(
-                    text = text,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
-    }
-}
-
-@Composable
 internal fun SurfaceCard(content: @Composable () -> Unit) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+    androidx.compose.material3.Card(
+        colors = androidx.compose.material3.CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+        ),
+        elevation = androidx.compose.material3.CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier.fillMaxWidth(),
     ) {
         content()

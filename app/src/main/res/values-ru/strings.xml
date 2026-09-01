@@ -173,18 +173,18 @@
     <string name="stat_ping">Пинг</string>
     <string name="stat_ping_value">%1$d мс</string>
     <string name="stat_session">Сессия</string>
-    <string name="split_off_title">Раздельное туннелирование</string>
-    <string name="split_off_summary">Весь трафик устройства идёт через VPN</string>
-    <string name="split_on_title">Только выбранные приложения</string>
-    <string name="split_off">Выключено</string>
-    <string name="split_on">Включено</string>
     <string name="vpn_inactive_note">VPN не активен. Соединение не защищено.</string>
     <string name="vpn_active_note">Все соединения устройства идут через туннель</string>
-    <string name="tip_title">Подсказка</string>
-    <string name="tip_connect">Нажми «Подключиться», чтобы попасть в профиль «%1$s».</string>
-    <string name="tip_no_server">Укажи сервер, логин и пароль в разделе «Подключение», затем нажми «Подключиться».</string>
     <string name="info_ip">IP в туннеле</string>
     <string name="info_dns">DNS-сервер</string>
     <string name="info_protocol">Протокол</string>
     <string name="route_blocked">не маршрутизируется</string>
+    <string name="profile_new">Создать профиль</string>
+    <string name="profile_name">Название</string>
+    <string name="profile_name_hint">Дом</string>
+    <string name="profile_editor_note">Остальные настройки — MTU, маршруты, исключения — остаются такими, как записаны в профиле.</string>
+    <string name="profile_delete_message">Удалить профиль? Текущие настройки останутся как есть.</string>
+    <string name="exclusions_title">Исключения</string>
+    <string name="exclusions_off">Весь трафик устройства идёт через туннель</string>
+    <string name="exclusions_on">Мимо туннеля: %1$d прил.</string>
 </resources>

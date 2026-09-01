@@ -3,28 +3,39 @@ package kittoku.osc.ui
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.RestartAlt
-import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Upload
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.core.content.edit
 import home.keenetic.sstp.R
 import kittoku.osc.preference.OscPrefKey
-import kittoku.osc.preference.PROFILE_KEY_HEADER
 import kittoku.osc.preference.deserializeProfile
 import kittoku.osc.preference.importProfile
 import kittoku.osc.preference.serializeProfile
@@ -33,17 +44,23 @@ import java.io.BufferedOutputStream
 
 
 @Composable
-internal fun ProfilesScreen(prefs: PrefsRepository) {
+internal fun ProfilesScreen(
+    prefs: PrefsRepository,
+    onCreateProfile: () -> Unit,
+    onEditProfile: (String) -> Unit,
+) {
     val context = LocalContext.current
 
-    // Профили лежат в тех же SharedPreferences под своим префиксом, поэтому
-    // список приходится перечитывать вручную после каждого изменения.
-    var profileNames by remember { mutableStateOf(readProfileNames(prefs)) }
+    val activeProfile by prefs.stringState(OscPrefKey.HOME_ACTIVE_PROFILE)
 
-    var isSaveDialogShown by remember { mutableStateOf(false) }
+    // Профили лежат в тех же SharedPreferences под своим префиксом, а не в
+    // наблюдаемом ключе, поэтому список перечитывается по счётчику изменений.
+    var revision by remember { mutableIntStateOf(0) }
+    val profiles = remember(revision, activeProfile) { readProfiles(prefs) }
+
     var isExportWarningShown by remember { mutableStateOf(false) }
     var isResetDialogShown by remember { mutableStateOf(false) }
-    var openedProfile by remember { mutableStateOf<String?>(null) }
+    var profileToDelete by remember { mutableStateOf<String?>(null) }
 
     val hostname by prefs.stringState(OscPrefKey.HOME_HOSTNAME)
 
@@ -63,6 +80,7 @@ internal fun ProfilesScreen(prefs: PrefsRepository) {
                 toast(R.string.profile_import_failed_toast)
             } else {
                 importProfile(profile, prefs.raw)
+                revision++
                 toast(R.string.profile_imported_toast)
             }
         }
@@ -83,33 +101,34 @@ internal fun ProfilesScreen(prefs: PrefsRepository) {
     }
 
     Column {
-        SectionTitle(stringResource(R.string.profiles_saved))
-
-        if (profileNames.isEmpty()) {
+        if (profiles.isEmpty()) {
             Text(
                 text = stringResource(R.string.profiles_empty),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                modifier = Modifier.padding(16.dp),
             )
         }
 
-        val activeProfile by prefs.stringState(OscPrefKey.HOME_ACTIVE_PROFILE)
-
-        profileNames.forEach { name ->
-            SettingRow(
-                title = name,
-                summary = if (name == activeProfile) stringResource(R.string.profile_active) else null,
-                onClick = { openedProfile = name },
+        profiles.forEach { profile ->
+            ProfileRow(
+                profile = profile,
+                isActive = profile.name == activeProfile,
+                onApply = {
+                    applyProfile(prefs, profile.name)
+                    toast(R.string.profile_loaded_toast)
+                },
+                onEdit = { onEditProfile(profile.name) },
+                onDelete = { profileToDelete = profile.name },
             )
         }
 
         GroupDivider()
 
         NavigationRow(
-            title = stringResource(R.string.profile_save),
-            icon = Icons.Filled.Save,
-            onClick = { isSaveDialogShown = true },
+            title = stringResource(R.string.profile_new),
+            icon = Icons.Filled.Add,
+            onClick = onCreateProfile,
         )
 
         NavigationRow(
@@ -131,66 +150,19 @@ internal fun ProfilesScreen(prefs: PrefsRepository) {
         )
     }
 
-    if (isSaveDialogShown) {
-        TextInputDialog(
-            title = stringResource(R.string.profile_save),
-            initialValue = "",
-            placeholder = hostname.ifEmpty { stringResource(R.string.profile_save_hint) },
-            note = stringResource(R.string.profile_save_message),
-            onDismiss = { isSaveDialogShown = false },
-            onConfirm = { name ->
-                val key = PROFILE_KEY_HEADER + name.ifBlank { hostname }
-
-                prefs.raw.edit { putString(key, serializeProfile(prefs.raw)) }
-                setActiveProfile(prefs, key.substringAfter(PROFILE_KEY_HEADER))
-
-                profileNames = readProfileNames(prefs)
-                isSaveDialogShown = false
-                toast(R.string.profile_saved_toast)
+    profileToDelete?.also { name ->
+        ConfirmDialog(
+            title = name,
+            message = stringResource(R.string.profile_delete_message),
+            confirmLabel = stringResource(R.string.profile_delete),
+            onDismiss = { profileToDelete = null },
+            onConfirm = {
+                forgetProfile(prefs, name)
+                profileToDelete = null
+                revision++
+                toast(R.string.profile_deleted_toast)
             },
         )
-    }
-
-    openedProfile?.also { name ->
-        val key = PROFILE_KEY_HEADER + name
-        val profile = remember(name) { prefs.raw.getString(key, null)?.let { deserializeProfile(it) } }
-
-        if (profile == null) {
-            openedProfile = null
-            toast(R.string.profile_invalid_toast)
-        } else {
-            val summary = buildString {
-                appendLine(
-                    stringResource(R.string.pref_hostname) + ": " +
-                        profile.stringSetting[OscPrefKey.HOME_HOSTNAME.name].orEmpty()
-                )
-                appendLine(
-                    stringResource(R.string.pref_username) + ": " +
-                        profile.stringSetting[OscPrefKey.HOME_USERNAME.name].orEmpty()
-                )
-                append(
-                    stringResource(R.string.pref_port) + ": " +
-                        (profile.intSetting[OscPrefKey.SSL_PORT.name]?.toString().orEmpty())
-                )
-            }
-
-            ProfileDialog(
-                name = name,
-                summary = summary,
-                onDismiss = { openedProfile = null },
-                onLoad = {
-                    applyProfile(prefs, name)
-                    openedProfile = null
-                    toast(R.string.profile_loaded_toast)
-                },
-                onDelete = {
-                    forgetProfile(prefs, name)
-                    profileNames = readProfileNames(prefs)
-                    openedProfile = null
-                    toast(R.string.profile_deleted_toast)
-                },
-            )
-        }
     }
 
     if (isExportWarningShown) {
@@ -213,6 +185,7 @@ internal fun ProfilesScreen(prefs: PrefsRepository) {
             onConfirm = {
                 importProfile(null, prefs.raw)
                 isResetDialogShown = false
+                revision++
                 toast(R.string.defaults_reloaded_toast)
             },
         )
@@ -220,30 +193,89 @@ internal fun ProfilesScreen(prefs: PrefsRepository) {
 }
 
 @Composable
-private fun ProfileDialog(
-    name: String,
-    summary: String,
-    onDismiss: () -> Unit,
-    onLoad: () -> Unit,
+private fun ProfileRow(
+    profile: ProfileSummary,
+    isActive: Boolean,
+    onApply: () -> Unit,
+    onEdit: () -> Unit,
     onDelete: () -> Unit,
 ) {
-    androidx.compose.material3.AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(name) },
-        text = { Text(summary) },
-        confirmButton = {
-            androidx.compose.material3.TextButton(onClick = onLoad) {
-                Text(stringResource(R.string.profile_load))
-            }
-        },
-        dismissButton = {
-            androidx.compose.material3.TextButton(onClick = onDelete) {
-                Text(
-                    text = stringResource(R.string.profile_delete),
-                    color = MaterialTheme.colorScheme.error,
+    var isMenuShown by remember { mutableStateOf(false) }
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onApply)
+            .padding(start = 16.dp, top = 8.dp, bottom = 8.dp),
+    ) {
+        Icon(
+            imageVector = profileIcon(profile.name),
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+        )
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = profile.name,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
+            )
+
+            Text(
+                text = profile.hostname.ifEmpty { stringResource(R.string.no_host) },
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+
+        if (isActive) {
+            Text(
+                text = stringResource(R.string.profile_active),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
+
+        Box {
+            IconButton(onClick = { isMenuShown = true }) {
+                Icon(
+                    imageVector = Icons.Filled.MoreVert,
+                    contentDescription = stringResource(R.string.action_more),
                 )
             }
-        },
-    )
-}
 
+            DropdownMenu(expanded = isMenuShown, onDismissRequest = { isMenuShown = false }) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.profile_load)) },
+                    onClick = {
+                        isMenuShown = false
+                        onApply()
+                    },
+                )
+
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.action_edit)) },
+                    onClick = {
+                        isMenuShown = false
+                        onEdit()
+                    },
+                )
+
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            text = stringResource(R.string.profile_delete),
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    },
+                    onClick = {
+                        isMenuShown = false
+                        onDelete()
+                    },
+                )
+            }
+        }
+    }
+}

@@ -57,6 +57,7 @@ private enum class Screen(val titleId: Int, val isTab: Boolean) {
     SETTINGS(R.string.nav_settings, true),
     CONNECTION(R.string.nav_connection, false),
     APPS(R.string.nav_apps, false),
+    PROFILE_EDITOR(R.string.profile_new, false),
     DETAILS(R.string.status_title, false),
 }
 
@@ -70,6 +71,8 @@ internal fun AppRoot(prefs: PrefsRepository) {
     var screen by rememberSaveable { mutableStateOf(Screen.HOME) }
     // Куда возвращаться из экранов, которые открываются поверх вкладки.
     var parentTab by rememberSaveable { mutableStateOf(Screen.HOME) }
+    // null — создаём новый профиль, иначе правим существующий.
+    var editedProfile by rememberSaveable { mutableStateOf<String?>(null) }
 
     val state by prefs.stringState(OscPrefKey.HOME_STATE)
     val hostname by prefs.stringState(OscPrefKey.HOME_HOSTNAME)
@@ -199,12 +202,25 @@ internal fun AppRoot(prefs: PrefsRepository) {
                     onConnect = { connect() },
                     onDisconnect = { startVpnService(ACTION_VPN_DISCONNECT) },
                     onOpenProfiles = { open(Screen.PROFILES) },
+                    onCreateProfile = {
+                        editedProfile = null
+                        open(Screen.PROFILE_EDITOR)
+                    },
                     onOpenApps = { open(Screen.APPS) },
                     onOpenDetails = { open(Screen.DETAILS) },
-                    onOpenConnection = { open(Screen.CONNECTION) },
                 )
 
-                Screen.PROFILES -> ProfilesScreen(prefs)
+                Screen.PROFILES -> ProfilesScreen(
+                    prefs = prefs,
+                    onCreateProfile = {
+                        editedProfile = null
+                        open(Screen.PROFILE_EDITOR)
+                    },
+                    onEditProfile = {
+                        editedProfile = it
+                        open(Screen.PROFILE_EDITOR)
+                    },
+                )
 
                 Screen.SETTINGS -> SettingsScreen(
                     prefs = prefs,
@@ -217,6 +233,12 @@ internal fun AppRoot(prefs: PrefsRepository) {
                 Screen.APPS -> AppsScreen(prefs)
 
                 Screen.DETAILS -> DetailsScreen(status)
+
+                Screen.PROFILE_EDITOR -> ProfileEditorScreen(
+                    prefs = prefs,
+                    editedProfile = editedProfile,
+                    onDone = { screen = parentTab },
+                )
             }
         }
     }
