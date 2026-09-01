@@ -22,14 +22,14 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.NetworkPing
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material.icons.filled.Shield
-import androidx.compose.material.icons.filled.NetworkPing
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
@@ -46,7 +46,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import home.keenetic.sstp.R
 import kittoku.osc.preference.LIST_TYPE_DISALLOWED
 import kittoku.osc.preference.OscPrefKey
@@ -76,8 +78,8 @@ internal fun HomeScreen(
     val activeProfile by prefs.stringState(OscPrefKey.HOME_ACTIVE_PROFILE)
 
     Column(
-        verticalArrangement = Arrangement.spacedBy(20.dp),
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        modifier = Modifier.padding(horizontal = 16.dp),
     ) {
         Hero(
             name = activeProfile.ifEmpty { hostname }.ifEmpty { stringResource(R.string.no_host) },
@@ -94,18 +96,22 @@ internal fun HomeScreen(
         ProfilesStrip(
             prefs = prefs,
             activeProfile = activeProfile,
+            // Во время соединения переключать профиль нечем: настройки применяются
+            // при подъёме туннеля, а экран показывал бы «Подключено» уже для чужого
+            // профиля. Поэтому чужие чипы недоступны, пока туннель жив.
+            isLocked = isConnected || isBusy,
             onOpenProfiles = onOpenProfiles,
             onCreateProfile = onCreateProfile,
         )
 
-        ExclusionsCard(
-            prefs = prefs,
-            isConnected = isConnected,
-            onOpenApps = onOpenApps,
-        )
+        ExclusionsCard(prefs = prefs, onOpenApps = onOpenApps)
 
         if (isConnected) {
-            InfoStrip(status = status, onOpenDetails = onOpenDetails)
+            InfoStrip(
+                status = status,
+                externalIp = rememberExternalIp(isConnected, connectedAt),
+                onOpenDetails = onOpenDetails,
+            )
         }
     }
 }
@@ -124,8 +130,7 @@ private fun Hero(
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(6.dp),
-        modifier = Modifier.padding(top = 8.dp),
+        modifier = Modifier.padding(top = 4.dp),
     ) {
         Text(
             text = name,
@@ -138,13 +143,14 @@ private fun Hero(
                 text = hostname,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 2.dp),
             )
         }
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp),
-            modifier = Modifier.padding(top = 2.dp),
+            modifier = Modifier.padding(top = 14.dp),
         ) {
             Box(
                 modifier = Modifier
@@ -180,14 +186,14 @@ private fun Hero(
         ConnectionDiagram(
             isConnected = isConnected,
             isBusy = isBusy,
-            modifier = Modifier.padding(vertical = 8.dp),
+            modifier = Modifier.padding(top = 6.dp),
         )
 
         if (isConnected) {
             SessionStats(connectedAt = connectedAt, pingTarget = pingTarget)
         }
 
-        Spacer(modifier = Modifier.height(if (isConnected) 12.dp else 4.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         Button(
             onClick = if (isConnected || isBusy) onDisconnect else onConnect,
@@ -230,7 +236,7 @@ private fun SessionStats(connectedAt: Long?, pingTarget: String?) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(20.dp),
-        modifier = Modifier.padding(top = 4.dp),
+        modifier = Modifier.padding(top = 6.dp),
     ) {
         StatTile(
             icon = Icons.Filled.NetworkPing,
@@ -284,14 +290,18 @@ private fun StatTile(icon: ImageVector, value: String, label: String) {
 private fun ProfilesStrip(
     prefs: PrefsRepository,
     activeProfile: String,
+    isLocked: Boolean,
     onOpenProfiles: () -> Unit,
     onCreateProfile: () -> Unit,
 ) {
     // Список профилей лежит в тех же prefs под своим префиксом и меняется редко,
     // поэтому перечитываем его при каждой смене активного профиля.
-    val names = remember(activeProfile) { readProfileNames(prefs) }
+    val profiles = remember(activeProfile) { readProfiles(prefs) }
 
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+        modifier = Modifier.padding(top = 8.dp),
+    ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth(),
@@ -325,11 +335,14 @@ private fun ProfilesStrip(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.horizontalScroll(rememberScrollState()),
         ) {
-            names.forEach { name ->
+            profiles.forEach { profile ->
+                val isActive = profile.name == activeProfile
+
                 ProfileChip(
-                    name = name,
-                    isActive = name == activeProfile,
-                    onClick = { applyProfile(prefs, name) },
+                    profile = profile,
+                    isActive = isActive,
+                    isEnabled = isActive || !isLocked,
+                    onClick = { applyProfile(prefs, profile.name) },
                 )
             }
 
@@ -339,10 +352,17 @@ private fun ProfilesStrip(
 }
 
 @Composable
-private fun ProfileChip(name: String, isActive: Boolean, onClick: () -> Unit) {
+private fun ProfileChip(
+    profile: ProfileSummary,
+    isActive: Boolean,
+    isEnabled: Boolean,
+    onClick: () -> Unit,
+) {
+    val alpha = if (isEnabled) 1f else 0.4f
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
         modifier = Modifier
             .background(
                 color = if (isActive) {
@@ -352,17 +372,33 @@ private fun ProfileChip(name: String, isActive: Boolean, onClick: () -> Unit) {
                 },
                 shape = RoundedCornerShape(16.dp),
             )
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .clickable(enabled = isEnabled && !isActive, onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 10.dp),
     ) {
         Icon(
-            imageVector = profileIcon(name),
+            imageVector = profileIconOf(profile.iconIndex),
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
+            tint = MaterialTheme.colorScheme.primary.copy(alpha = alpha),
             modifier = Modifier.size(20.dp),
         )
 
-        Text(text = name, style = MaterialTheme.typography.bodyLarge)
+        Column {
+            Text(
+                text = profile.name,
+                style = MaterialTheme.typography.bodyLarge,
+                letterSpacing = 0.sp,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha),
+            )
+
+            if (profile.hostname.isNotEmpty()) {
+                Text(
+                    text = profile.hostname,
+                    style = MaterialTheme.typography.bodySmall,
+                    letterSpacing = 0.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = alpha),
+                )
+            }
+        }
 
         if (isActive) {
             Icon(
@@ -380,9 +416,10 @@ private fun AddProfileChip(onClick: () -> Unit) {
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
+            .height(60.dp)
             .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(16.dp))
             .clickable(onClick = onClick)
-            .padding(horizontal = 20.dp, vertical = 12.dp),
+            .padding(horizontal = 20.dp),
     ) {
         Icon(
             imageVector = Icons.Filled.Add,
@@ -393,114 +430,85 @@ private fun AddProfileChip(onClick: () -> Unit) {
 }
 
 @Composable
-private fun ExclusionsCard(
-    prefs: PrefsRepository,
-    isConnected: Boolean,
-    onOpenApps: () -> Unit,
-) {
+private fun ExclusionsCard(prefs: PrefsRepository, onOpenApps: () -> Unit) {
     val isEnabled by prefs.booleanState(OscPrefKey.ROUTE_DO_ENABLE_APP_BASED_RULE)
     val selected by prefs.setState(OscPrefKey.ROUTE_SELECTED_APPS)
 
     SurfaceCard {
-        Column {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier
+                .clickable(onClick = onOpenApps)
+                .padding(16.dp),
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .clickable(onClick = onOpenApps)
-                    .padding(16.dp),
+                    .size(40.dp)
+                    .background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
             ) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.CallSplit,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp),
-                    )
-                }
-
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(R.string.exclusions_title),
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                    )
-
-                    Text(
-                        text = if (isEnabled) {
-                            stringResource(R.string.exclusions_on, selected.size)
-                        } else {
-                            stringResource(R.string.exclusions_off)
-                        },
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-
-                Switch(
-                    checked = isEnabled,
-                    onCheckedChange = {
-                        // Карточка про исключения, поэтому режим списка задаём явно:
-                        // в туннель идёт всё, кроме отмеченного.
-                        prefs.setString(OscPrefKey.ROUTE_APP_LIST_TYPE, LIST_TYPE_DISALLOWED)
-                        prefs.setBoolean(OscPrefKey.ROUTE_DO_ENABLE_APP_BASED_RULE, it)
-                    },
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.CallSplit,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp),
                 )
             }
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier.padding(16.dp),
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Shield,
-                    contentDescription = null,
-                    tint = if (isConnected) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    },
-                    modifier = Modifier.size(18.dp),
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.exclusions_title),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
                 )
 
                 Text(
-                    text = stringResource(
-                        if (isConnected) R.string.vpn_active_note else R.string.vpn_inactive_note
-                    ),
+                    text = if (isEnabled) {
+                        stringResource(R.string.exclusions_on, selected.size)
+                    } else {
+                        stringResource(R.string.exclusions_off)
+                    },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
+
+            Switch(
+                checked = isEnabled,
+                onCheckedChange = {
+                    // Карточка про исключения, поэтому режим списка задаём явно:
+                    // в туннель идёт всё, кроме отмеченного.
+                    prefs.setString(OscPrefKey.ROUTE_APP_LIST_TYPE, LIST_TYPE_DISALLOWED)
+                    prefs.setBoolean(OscPrefKey.ROUTE_DO_ENABLE_APP_BASED_RULE, it)
+                },
+            )
         }
     }
 }
 
 @Composable
-private fun InfoStrip(status: ConnectionStatus, onOpenDetails: () -> Unit) {
+private fun InfoStrip(
+    status: ConnectionStatus,
+    externalIp: String?,
+    onOpenDetails: () -> Unit,
+) {
     SurfaceCard {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .clickable(onClick = onOpenDetails)
-                .padding(horizontal = 12.dp, vertical = 12.dp),
+                .padding(start = 12.dp, end = 4.dp, top = 12.dp, bottom = 12.dp),
         ) {
             InfoCell(
                 icon = Icons.Filled.Public,
-                label = stringResource(R.string.info_ip),
-                value = status.addresses.firstOrNull() ?: "—",
-                modifier = Modifier.weight(1f),
+                label = stringResource(R.string.info_external_ip),
+                value = externalIp ?: "…",
+                modifier = Modifier.weight(1.2f),
             )
 
             VerticalDivider(
-                modifier = Modifier.height(32.dp),
+                modifier = Modifier.height(30.dp),
                 color = MaterialTheme.colorScheme.outlineVariant,
             )
 
@@ -512,21 +520,22 @@ private fun InfoStrip(status: ConnectionStatus, onOpenDetails: () -> Unit) {
             )
 
             VerticalDivider(
-                modifier = Modifier.height(32.dp),
+                modifier = Modifier.height(30.dp),
                 color = MaterialTheme.colorScheme.outlineVariant,
             )
 
             InfoCell(
                 icon = Icons.Filled.Lock,
                 label = stringResource(R.string.info_protocol),
-                value = status.protocol?.let { "SSTP / $it" } ?: "SSTP",
-                modifier = Modifier.weight(1f),
+                value = status.protocol ?: "SSTP",
+                modifier = Modifier.weight(0.8f),
             )
 
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(20.dp),
             )
         }
     }
@@ -539,10 +548,7 @@ private fun InfoCell(
     value: String,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(2.dp),
-        modifier = modifier.padding(horizontal = 8.dp),
-    ) {
+    Column(modifier = modifier.padding(horizontal = 8.dp)) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -551,13 +557,15 @@ private fun InfoCell(
                 imageVector = icon,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(14.dp),
+                modifier = Modifier.size(13.dp),
             )
 
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                letterSpacing = 0.sp,
+                maxLines = 1,
             )
         }
 
@@ -565,17 +573,18 @@ private fun InfoCell(
             text = value,
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Medium,
+            letterSpacing = 0.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
 
 @Composable
 internal fun SurfaceCard(content: @Composable () -> Unit) {
-    androidx.compose.material3.Card(
-        colors = androidx.compose.material3.CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-        ),
-        elevation = androidx.compose.material3.CardDefaults.cardElevation(defaultElevation = 0.dp),
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier.fillMaxWidth(),
     ) {
         content()

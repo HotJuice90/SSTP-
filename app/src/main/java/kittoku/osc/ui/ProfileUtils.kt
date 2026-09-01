@@ -16,7 +16,23 @@ import kittoku.osc.preference.encodeProfile
 import kittoku.osc.preference.importProfile
 
 
-internal class ProfileSummary(val name: String, val hostname: String)
+// Значок профиля хранится своим ключом рядом с самим профилем: формат профиля
+// пришёл из апстрима и своих полей под UI не имеет.
+private const val PROFILE_ICON_HEADER = "PROFILE_ICON."
+
+internal val PROFILE_ICONS = listOf(
+    Icons.Filled.Home,
+    Icons.Filled.Apartment,
+    Icons.Filled.Cottage,
+    Icons.Filled.Router,
+    Icons.Filled.Cloud,
+)
+
+internal class ProfileSummary(
+    val name: String,
+    val hostname: String,
+    val iconIndex: Int,
+)
 
 internal class ProfileFields(
     val hostname: String,
@@ -24,6 +40,10 @@ internal class ProfileFields(
     val username: String,
     val password: String,
 )
+
+internal fun profileIconOf(index: Int): ImageVector {
+    return PROFILE_ICONS[index.coerceIn(PROFILE_ICONS.indices)]
+}
 
 internal fun readProfileNames(prefs: PrefsRepository): List<String> {
     return prefs.raw.all.keys
@@ -34,8 +54,16 @@ internal fun readProfileNames(prefs: PrefsRepository): List<String> {
 
 internal fun readProfiles(prefs: PrefsRepository): List<ProfileSummary> {
     return readProfileNames(prefs).map {
-        ProfileSummary(it, readProfileFields(prefs, it)?.hostname ?: "")
+        ProfileSummary(
+            name = it,
+            hostname = readProfileFields(prefs, it)?.hostname ?: "",
+            iconIndex = readProfileIcon(prefs, it),
+        )
     }
+}
+
+internal fun readProfileIcon(prefs: PrefsRepository, name: String): Int {
+    return prefs.raw.getInt(PROFILE_ICON_HEADER + name, 0)
 }
 
 internal fun readProfileFields(prefs: PrefsRepository, name: String): ProfileFields? {
@@ -48,22 +76,6 @@ internal fun readProfileFields(prefs: PrefsRepository, name: String): ProfileFie
         username = profile.stringSetting[OscPrefKey.HOME_USERNAME.name].orEmpty(),
         password = profile.stringSetting[OscPrefKey.HOME_PASSWORD.name].orEmpty(),
     )
-}
-
-private val PROFILE_ICONS = listOf(
-    Icons.Filled.Home,
-    Icons.Filled.Apartment,
-    Icons.Filled.Cottage,
-    Icons.Filled.Router,
-    Icons.Filled.Cloud,
-)
-
-/** Иконка выводится из имени, а не хранится: у профиля в апстриме нет своих полей,
- *  а разные значки нужны только чтобы отличать записи взглядом. */
-internal fun profileIcon(name: String): ImageVector {
-    val index = (name.hashCode().toLong() and 0xFFFFFFFFL) % PROFILE_ICONS.size
-
-    return PROFILE_ICONS[index.toInt()]
 }
 
 /** Профиль — это снимок всех настроек, поэтому «переключение» и есть их загрузка. */
@@ -90,6 +102,7 @@ internal fun saveProfile(
     port: Int,
     username: String,
     password: String,
+    iconIndex: Int,
 ) {
     val base = previousName
         ?.let { prefs.raw.getString(PROFILE_KEY_HEADER + it, null) }
@@ -104,9 +117,11 @@ internal fun saveProfile(
     prefs.raw.edit {
         if (previousName != null && previousName != name) {
             remove(PROFILE_KEY_HEADER + previousName)
+            remove(PROFILE_ICON_HEADER + previousName)
         }
 
         putString(PROFILE_KEY_HEADER + name, encodeProfile(base))
+        putInt(PROFILE_ICON_HEADER + name, iconIndex)
     }
 
     val wasActive = prefs.getString(OscPrefKey.HOME_ACTIVE_PROFILE) == previousName
@@ -123,7 +138,10 @@ internal fun setActiveProfile(prefs: PrefsRepository, name: String) {
 }
 
 internal fun forgetProfile(prefs: PrefsRepository, name: String) {
-    prefs.raw.edit { remove(PROFILE_KEY_HEADER + name) }
+    prefs.raw.edit {
+        remove(PROFILE_KEY_HEADER + name)
+        remove(PROFILE_ICON_HEADER + name)
+    }
 
     if (prefs.getString(OscPrefKey.HOME_ACTIVE_PROFILE) == name) {
         setActiveProfile(prefs, "")

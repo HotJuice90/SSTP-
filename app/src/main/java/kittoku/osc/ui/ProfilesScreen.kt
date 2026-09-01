@@ -211,7 +211,7 @@ private fun ProfileRow(
             .padding(start = 16.dp, top = 8.dp, bottom = 8.dp),
     ) {
         Icon(
-            imageVector = profileIcon(profile.name),
+            imageVector = profileIconOf(profile.iconIndex),
             contentDescription = null,
             tint = MaterialTheme.colorScheme.primary,
         )

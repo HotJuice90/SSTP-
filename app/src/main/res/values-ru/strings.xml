@@ -173,10 +173,8 @@
     <string name="stat_ping">Пинг</string>
     <string name="stat_ping_value">%1$d мс</string>
     <string name="stat_session">Сессия</string>
-    <string name="vpn_inactive_note">VPN не активен. Соединение не защищено.</string>
-    <string name="vpn_active_note">Все соединения устройства идут через туннель</string>
-    <string name="info_ip">IP в туннеле</string>
-    <string name="info_dns">DNS-сервер</string>
+    <string name="info_ip">IP</string>
+    <string name="info_dns">DNS</string>
     <string name="info_protocol">Протокол</string>
     <string name="route_blocked">не маршрутизируется</string>
     <string name="profile_new">Создать профиль</string>
@@ -187,4 +185,6 @@
     <string name="exclusions_title">Исключения</string>
     <string name="exclusions_off">Весь трафик устройства идёт через туннель</string>
     <string name="exclusions_on">Мимо туннеля: %1$d прил.</string>
+    <string name="profile_icon">Значок</string>
+    <string name="info_external_ip">Внешний IP</string>
 </resources>

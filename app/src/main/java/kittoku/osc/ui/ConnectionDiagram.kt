@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -60,7 +61,7 @@ internal fun ConnectionDiagram(
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalArrangement = Arrangement.Center,
         modifier = modifier.fillMaxWidth(),
     ) {
         DiagramNode(isActive = true) {
@@ -74,7 +75,7 @@ internal fun ConnectionDiagram(
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
-                .weight(1f)
+                .width(120.dp)
                 .height(56.dp)
                 .drawBehind {
                     val y = size.height / 2

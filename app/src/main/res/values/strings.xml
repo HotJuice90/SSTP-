@@ -174,10 +174,8 @@
     <string name="stat_ping">Ping</string>
     <string name="stat_ping_value">%1$d ms</string>
     <string name="stat_session">Session</string>
-    <string name="vpn_inactive_note">VPN is off. The connection is not protected.</string>
-    <string name="vpn_active_note">All connections of the device go through the tunnel</string>
-    <string name="info_ip">IP in tunnel</string>
-    <string name="info_dns">DNS server</string>
+    <string name="info_ip">IP</string>
+    <string name="info_dns">DNS</string>
     <string name="info_protocol">Protocol</string>
     <string name="route_blocked">not routed</string>
     <string name="profile_new">New profile</string>
@@ -188,4 +186,6 @@
     <string name="exclusions_title">Exclusions</string>
     <string name="exclusions_off">All device traffic goes through the tunnel</string>
     <string name="exclusions_on">%1$d apps bypass the tunnel</string>
+    <string name="profile_icon">Icon</string>
+    <string name="info_external_ip">External IP</string>
 </resources>
