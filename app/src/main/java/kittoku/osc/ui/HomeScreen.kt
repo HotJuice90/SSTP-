@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import home.keenetic.sstp.BuildConfig
 import home.keenetic.sstp.R
 import kittoku.osc.preference.LIST_TYPE_ALLOWED
 import kittoku.osc.preference.STATE_CONNECTED
@@ -79,6 +80,13 @@ internal fun HomeScreen(
         GroupDivider()
 
         StatusCard(status)
+
+        Text(
+            text = stringResource(R.string.version, BuildConfig.VERSION_NAME),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
+        )
     }
 }
 
