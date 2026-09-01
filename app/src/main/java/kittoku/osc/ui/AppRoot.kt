@@ -21,6 +21,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -158,12 +159,21 @@ internal fun AppRoot(prefs: PrefsRepository) {
         },
         bottomBar = {
             if (screen.isTab) {
+                val itemColors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    indicatorColor = MaterialTheme.colorScheme.surfaceVariant,
+                )
+
                 NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
                     NavigationBarItem(
                         selected = screen == Screen.HOME,
                         onClick = { open(Screen.HOME) },
                         icon = { Icon(Icons.Filled.Home, contentDescription = null) },
                         label = { Text(stringResource(R.string.nav_home)) },
+                        colors = itemColors,
                     )
 
                     NavigationBarItem(
@@ -171,6 +181,7 @@ internal fun AppRoot(prefs: PrefsRepository) {
                         onClick = { open(Screen.PROFILES) },
                         icon = { Icon(Icons.Filled.FolderSpecial, contentDescription = null) },
                         label = { Text(stringResource(R.string.nav_profiles)) },
+                        colors = itemColors,
                     )
 
                     NavigationBarItem(
@@ -178,6 +189,7 @@ internal fun AppRoot(prefs: PrefsRepository) {
                         onClick = { open(Screen.SETTINGS) },
                         icon = { Icon(Icons.Filled.Tune, contentDescription = null) },
                         label = { Text(stringResource(R.string.nav_settings)) },
+                        colors = itemColors,
                     )
                 }
             }

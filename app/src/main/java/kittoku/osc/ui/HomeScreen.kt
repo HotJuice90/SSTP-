@@ -19,7 +19,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.CallSplit
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.NetworkPing
@@ -33,6 +32,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
@@ -194,10 +194,23 @@ private fun Hero(
 
         Spacer(modifier = Modifier.height(20.dp))
 
+        val isActive = isConnected || isBusy
+
         Button(
-            onClick = if (isConnected || isBusy) onDisconnect else onConnect,
+            onClick = if (isActive) onDisconnect else onConnect,
             shape = CircleShape,
-            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = if (isActive) {
+                    MaterialTheme.colorScheme.surfaceVariant
+                } else {
+                    MaterialTheme.colorScheme.primary
+                },
+                contentColor = if (isActive) {
+                    MaterialTheme.colorScheme.onSurface
+                } else {
+                    MaterialTheme.colorScheme.onPrimary
+                },
+            ),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(54.dp),
@@ -210,7 +223,7 @@ private fun Hero(
 
             Text(
                 text = stringResource(
-                    if (isConnected || isBusy) R.string.action_disconnect else R.string.action_connect
+                    if (isActive) R.string.action_disconnect else R.string.action_connect
                 ),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(start = 10.dp),
@@ -265,7 +278,7 @@ private fun StatTile(icon: ImageVector, value: String, label: String) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(20.dp),
         )
 
@@ -377,7 +390,11 @@ private fun ProfileChip(
         Icon(
             imageVector = profileIconOf(profile.iconIndex),
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary.copy(alpha = alpha),
+            tint = if (isActive) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = alpha)
+            },
             modifier = Modifier.size(20.dp),
         )
 
@@ -399,14 +416,6 @@ private fun ProfileChip(
             }
         }
 
-        if (isActive) {
-            Icon(
-                imageVector = Icons.Filled.CheckCircle,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(18.dp),
-            )
-        }
     }
 }
 
@@ -475,6 +484,11 @@ private fun ExclusionsCard(prefs: PrefsRepository, onOpenApps: () -> Unit) {
 
             Switch(
                 checked = isEnabled,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = MaterialTheme.colorScheme.surface,
+                    checkedTrackColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    checkedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                ),
                 onCheckedChange = {
                     // Карточка про исключения, поэтому режим списка задаём явно:
                     // в туннель идёт всё, кроме отмеченного.
