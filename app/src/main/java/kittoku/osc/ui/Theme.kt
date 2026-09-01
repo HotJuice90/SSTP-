@@ -1,39 +1,56 @@
 package kittoku.osc.ui
 
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 
 
-// Запасная палитра в тон иконке — используется там, где системных цветов нет
-// (Android 11 и ниже) или обои не дают динамической схемы.
-private val Navy = Color(0xFF14304A)
-private val NavyLight = Color(0xFF2E5A83)
-private val Sky = Color(0xFF8ECAF6)
+// Палитра фиксированная, без Material You: приложение должно выглядеть одинаково
+// на любом телефоне, а зелёный несёт смысл — им же показано состояние туннеля.
+private val Green = Color(0xFF16A34A)
+private val GreenDark = Color(0xFF15803D)
+private val GreenLight = Color(0xFF4ADE80)
+private val GreenSurface = Color(0xFFE8F5EC)
 
 private val LightScheme = lightColorScheme(
-    primary = Navy,
+    primary = Green,
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFD3E4F5),
-    onPrimaryContainer = Navy,
-    secondary = NavyLight,
-    tertiary = Color(0xFF2F6B4F),
+    primaryContainer = GreenSurface,
+    onPrimaryContainer = GreenDark,
+    secondary = GreenDark,
+    onSecondary = Color.White,
+    tertiary = Color(0xFF2563EB),
+    background = Color(0xFFF7F8F8),
+    onBackground = Color(0xFF14181A),
+    surface = Color.White,
+    onSurface = Color(0xFF14181A),
+    surfaceVariant = Color(0xFFF1F3F4),
+    onSurfaceVariant = Color(0xFF6B7280),
+    outline = Color(0xFFD5DADD),
+    outlineVariant = Color(0xFFE7EAEC),
+    error = Color(0xFFDC2626),
 )
 
 private val DarkScheme = darkColorScheme(
-    primary = Sky,
-    onPrimary = Navy,
-    primaryContainer = Color(0xFF1E4062),
-    onPrimaryContainer = Color(0xFFD3E4F5),
-    secondary = Color(0xFFA8C7E5),
-    tertiary = Color(0xFF8ED6AC),
+    primary = GreenLight,
+    onPrimary = Color(0xFF04240F),
+    primaryContainer = Color(0xFF14361F),
+    onPrimaryContainer = GreenLight,
+    secondary = GreenLight,
+    onSecondary = Color(0xFF04240F),
+    tertiary = Color(0xFF93C5FD),
+    background = Color(0xFF0E1211),
+    onBackground = Color(0xFFE7EAEC),
+    surface = Color(0xFF171B1A),
+    onSurface = Color(0xFFE7EAEC),
+    surfaceVariant = Color(0xFF1F2422),
+    onSurfaceVariant = Color(0xFF9AA3A8),
+    outline = Color(0xFF39403D),
+    outlineVariant = Color(0xFF262B29),
+    error = Color(0xFFF87171),
 )
 
 @Composable
@@ -41,17 +58,8 @@ internal fun SstpTheme(
     isDark: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit,
 ) {
-    val context = LocalContext.current
-
-    val scheme = when {
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            if (isDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-
-        isDark -> DarkScheme
-
-        else -> LightScheme
-    }
-
-    MaterialTheme(colorScheme = scheme, content = content)
+    MaterialTheme(
+        colorScheme = if (isDark) DarkScheme else LightScheme,
+        content = content,
+    )
 }

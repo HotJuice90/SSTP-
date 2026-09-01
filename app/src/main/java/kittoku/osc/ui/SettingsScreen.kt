@@ -17,6 +17,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Dns
+import home.keenetic.sstp.BuildConfig
 import home.keenetic.sstp.R
 import kittoku.osc.preference.AUTH_PROTOCOL_LIST
 import kittoku.osc.preference.LIST_TYPE_ALLOWED
@@ -37,10 +40,21 @@ private val CIPHER_SUITES: List<String> by lazy {
 internal fun SettingsScreen(
     prefs: PrefsRepository,
     onOpenApps: () -> Unit,
+    onOpenConnection: () -> Unit,
 ) {
     val context = LocalContext.current
+    val hostname by prefs.stringState(OscPrefKey.HOME_HOSTNAME)
 
     Column {
+        NavigationRow(
+            title = stringResource(R.string.nav_connection),
+            summary = hostname.ifEmpty { stringResource(R.string.no_host) },
+            icon = Icons.Filled.Dns,
+            onClick = onOpenConnection,
+        )
+
+        GroupDivider()
+
         // --- PPP ---
         SectionTitle(stringResource(R.string.group_ppp))
 
@@ -290,6 +304,13 @@ internal fun SettingsScreen(
         if (isAdvancedShown) {
             AdvancedSettings(prefs)
         }
+
+        Text(
+            text = stringResource(R.string.version, BuildConfig.VERSION_NAME),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(16.dp),
+        )
     }
 }
 

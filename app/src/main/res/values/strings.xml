@@ -169,4 +169,23 @@
     <string name="check_auth_timeout">the authentication timeout must be at least 1 second</string>
     <string name="check_dns">no DNS server address given</string>
     <string name="check_log_dir">no log directory selected</string>
+    <string name="profiles_all">All</string>
+    <string name="profile_active">Active</string>
+    <string name="stat_ping">Ping</string>
+    <string name="stat_ping_value">%1$d ms</string>
+    <string name="stat_session">Session</string>
+    <string name="split_off_title">Split tunneling</string>
+    <string name="split_off_summary">All device traffic goes through the VPN</string>
+    <string name="split_on_title">Selected apps only</string>
+    <string name="split_off">Off</string>
+    <string name="split_on">On</string>
+    <string name="vpn_inactive_note">VPN is off. The connection is not protected.</string>
+    <string name="vpn_active_note">All connections of the device go through the tunnel</string>
+    <string name="tip_title">Hint</string>
+    <string name="tip_connect">Tap Connect to reach the \u0022%1$s\u0022 profile.</string>
+    <string name="tip_no_server">Enter the server, username and password under Connection, then tap Connect.</string>
+    <string name="info_ip">IP in tunnel</string>
+    <string name="info_dns">DNS server</string>
+    <string name="info_protocol">Protocol</string>
+    <string name="route_blocked">not routed</string>
 </resources>

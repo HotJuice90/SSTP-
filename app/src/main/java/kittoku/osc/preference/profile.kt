@@ -27,6 +27,7 @@ private val EXCLUDED_STRING_PREFERENCES = arrayOf(
     OscPrefKey.HOME_STATUS,
     OscPrefKey.HOME_STATE,
     OscPrefKey.HOME_CONNECTED_AT,
+    OscPrefKey.HOME_ACTIVE_PROFILE,
 )
 
 @Serializable

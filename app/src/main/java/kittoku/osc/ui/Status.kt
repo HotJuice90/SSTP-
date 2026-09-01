@@ -6,6 +6,7 @@ import kittoku.osc.control.STATUS_KEY_DNS
 import kittoku.osc.control.STATUS_KEY_IP
 import kittoku.osc.control.STATUS_KEY_PROTOCOL
 import kittoku.osc.control.STATUS_KEY_ROUTE
+import kittoku.osc.control.STATUS_KEY_ROUTE_BLOCKED
 import kittoku.osc.control.STATUS_KEY_SUITE
 
 
@@ -15,6 +16,7 @@ internal data class ConnectionStatus(
     val addresses: List<String> = emptyList(),
     val dnsServers: List<String> = emptyList(),
     val routes: List<String> = emptyList(),
+    val blockedRoutes: List<String> = emptyList(),
     val appListType: String? = null,
     val apps: List<String> = emptyList(),
 ) {
@@ -33,6 +35,7 @@ internal fun parseConnectionStatus(raw: String): ConnectionStatus {
     val addresses = mutableListOf<String>()
     val dnsServers = mutableListOf<String>()
     val routes = mutableListOf<String>()
+    val blockedRoutes = mutableListOf<String>()
     val apps = mutableListOf<String>()
 
     raw.lineSequence().forEach { line ->
@@ -47,6 +50,7 @@ internal fun parseConnectionStatus(raw: String): ConnectionStatus {
             STATUS_KEY_IP -> addresses.add(value)
             STATUS_KEY_DNS -> dnsServers.add(value)
             STATUS_KEY_ROUTE -> routes.add(value)
+            STATUS_KEY_ROUTE_BLOCKED -> blockedRoutes.add(value)
             STATUS_KEY_APP_LIST_TYPE -> appListType = value
             STATUS_KEY_APP -> apps.add(value)
         }
@@ -58,6 +62,7 @@ internal fun parseConnectionStatus(raw: String): ConnectionStatus {
         addresses = addresses,
         dnsServers = dnsServers,
         routes = routes,
+        blockedRoutes = blockedRoutes,
         appListType = appListType,
         apps = apps,
     )

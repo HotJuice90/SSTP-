@@ -94,8 +94,14 @@ internal fun ProfilesScreen(prefs: PrefsRepository) {
             )
         }
 
+        val activeProfile by prefs.stringState(OscPrefKey.HOME_ACTIVE_PROFILE)
+
         profileNames.forEach { name ->
-            SettingRow(title = name, onClick = { openedProfile = name })
+            SettingRow(
+                title = name,
+                summary = if (name == activeProfile) stringResource(R.string.profile_active) else null,
+                onClick = { openedProfile = name },
+            )
         }
 
         GroupDivider()
@@ -136,6 +142,7 @@ internal fun ProfilesScreen(prefs: PrefsRepository) {
                 val key = PROFILE_KEY_HEADER + name.ifBlank { hostname }
 
                 prefs.raw.edit { putString(key, serializeProfile(prefs.raw)) }
+                setActiveProfile(prefs, key.substringAfter(PROFILE_KEY_HEADER))
 
                 profileNames = readProfileNames(prefs)
                 isSaveDialogShown = false
@@ -172,12 +179,12 @@ internal fun ProfilesScreen(prefs: PrefsRepository) {
                 summary = summary,
                 onDismiss = { openedProfile = null },
                 onLoad = {
-                    importProfile(profile, prefs.raw)
+                    applyProfile(prefs, name)
                     openedProfile = null
                     toast(R.string.profile_loaded_toast)
                 },
                 onDelete = {
-                    prefs.raw.edit { remove(key) }
+                    forgetProfile(prefs, name)
                     profileNames = readProfileNames(prefs)
                     openedProfile = null
                     toast(R.string.profile_deleted_toast)
@@ -240,9 +247,3 @@ private fun ProfileDialog(
     )
 }
 
-private fun readProfileNames(prefs: PrefsRepository): List<String> {
-    return prefs.raw.all.keys
-        .filter { it.startsWith(PROFILE_KEY_HEADER) }
-        .map { it.substringAfter(PROFILE_KEY_HEADER) }
-        .sorted()
-}

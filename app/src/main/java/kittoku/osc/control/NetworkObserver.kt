@@ -18,6 +18,7 @@ internal const val STATUS_KEY_SUITE = "SUITE"
 internal const val STATUS_KEY_IP = "IP"
 internal const val STATUS_KEY_DNS = "DNS"
 internal const val STATUS_KEY_ROUTE = "ROUTE"
+internal const val STATUS_KEY_ROUTE_BLOCKED = "ROUTE_BLOCKED"
 internal const val STATUS_KEY_APP_LIST_TYPE = "APP_LIST_TYPE"
 internal const val STATUS_KEY_APP = "APP"
 
@@ -78,7 +79,15 @@ internal class NetworkObserver(val bridge: SharedBridge) {
         }
 
         properties.routes.forEach {
-            summary.add("$STATUS_KEY_ROUTE=$it")
+            // RouteInfo.toString() тащит шлюз, имя интерфейса и "mtu 0" — в UI это шум,
+            // а mtu 0 ещё и путают с настройкой MTU. Оставляем только назначение.
+            val destination = it.destination.toString()
+
+            if (it.toString().contains("unreachable")) {
+                summary.add("$STATUS_KEY_ROUTE_BLOCKED=$destination")
+            } else {
+                summary.add("$STATUS_KEY_ROUTE=$destination")
+            }
         }
 
         val doEnableAppBasedRule = getBooleanPrefValue(OscPrefKey.ROUTE_DO_ENABLE_APP_BASED_RULE, bridge.prefs)
