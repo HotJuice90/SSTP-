@@ -2,10 +2,22 @@ package kittoku.osc.ui
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Apartment
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.Cottage
+import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Lan
+import androidx.compose.material.icons.filled.Pets
+import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Router
+import androidx.compose.material.icons.filled.SportsEsports
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material.icons.filled.Villa
+import androidx.compose.material.icons.filled.Warehouse
+import androidx.compose.material.icons.filled.Work
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.core.content.edit
 import kittoku.osc.preference.OscPrefKey
@@ -19,13 +31,27 @@ import kittoku.osc.preference.importProfile
 // Значок профиля хранится своим ключом рядом с самим профилем: формат профиля
 // пришёл из апстрима и своих полей под UI не имеет.
 private const val PROFILE_ICON_HEADER = "PROFILE_ICON."
+private const val PROFILE_USED_HEADER = "PROFILE_USED."
 
+// Дописывать только в конец: индекс уже сохранён у существующих профилей.
 internal val PROFILE_ICONS = listOf(
     Icons.Filled.Home,
     Icons.Filled.Apartment,
     Icons.Filled.Cottage,
     Icons.Filled.Router,
     Icons.Filled.Cloud,
+    Icons.Filled.Villa,
+    Icons.Filled.Warehouse,
+    Icons.Filled.Work,
+    Icons.Filled.Storage,
+    Icons.Filled.Lan,
+    Icons.Filled.Public,
+    Icons.Filled.Bolt,
+    Icons.Filled.Star,
+    Icons.Filled.Favorite,
+    Icons.Filled.Pets,
+    Icons.Filled.DirectionsCar,
+    Icons.Filled.SportsEsports,
 )
 
 internal class ProfileSummary(
@@ -52,6 +78,7 @@ internal fun readProfileNames(prefs: PrefsRepository): List<String> {
         .sorted()
 }
 
+/** Сверху тот, которым пользовались последним: к нему же чаще всего и возвращаются. */
 internal fun readProfiles(prefs: PrefsRepository): List<ProfileSummary> {
     return readProfileNames(prefs).map {
         ProfileSummary(
@@ -59,7 +86,20 @@ internal fun readProfiles(prefs: PrefsRepository): List<ProfileSummary> {
             hostname = readProfileFields(prefs, it)?.hostname ?: "",
             iconIndex = readProfileIcon(prefs, it),
         )
-    }
+    }.sortedWith(
+        compareByDescending<ProfileSummary> { readProfileUsedAt(prefs, it.name) }
+            .thenBy { it.name.lowercase() }
+    )
+}
+
+internal fun readProfileUsedAt(prefs: PrefsRepository, name: String): Long {
+    return prefs.raw.getLong(PROFILE_USED_HEADER + name, 0L)
+}
+
+internal fun touchProfile(prefs: PrefsRepository, name: String) {
+    if (name.isEmpty()) return
+
+    prefs.raw.edit { putLong(PROFILE_USED_HEADER + name, System.currentTimeMillis()) }
 }
 
 internal fun readProfileIcon(prefs: PrefsRepository, name: String): Int {
@@ -85,6 +125,7 @@ internal fun applyProfile(prefs: PrefsRepository, name: String): Boolean {
 
     importProfile(profile, prefs.raw)
     setActiveProfile(prefs, name)
+    touchProfile(prefs, name)
 
     return true
 }
@@ -118,6 +159,7 @@ internal fun saveProfile(
         if (previousName != null && previousName != name) {
             remove(PROFILE_KEY_HEADER + previousName)
             remove(PROFILE_ICON_HEADER + previousName)
+            remove(PROFILE_USED_HEADER + previousName)
         }
 
         putString(PROFILE_KEY_HEADER + name, encodeProfile(base))
@@ -141,6 +183,7 @@ internal fun forgetProfile(prefs: PrefsRepository, name: String) {
     prefs.raw.edit {
         remove(PROFILE_KEY_HEADER + name)
         remove(PROFILE_ICON_HEADER + name)
+        remove(PROFILE_USED_HEADER + name)
     }
 
     if (prefs.getString(OscPrefKey.HOME_ACTIVE_PROFILE) == name) {

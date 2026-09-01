@@ -121,6 +121,8 @@ internal fun AppRoot(prefs: PrefsRepository) {
             return
         }
 
+        touchProfile(prefs, prefs.getString(OscPrefKey.HOME_ACTIVE_PROFILE))
+
         VpnService.prepare(context)?.also {
             preparationLauncher.launch(it)
         } ?: startVpnService(ACTION_VPN_CONNECT)

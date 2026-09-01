@@ -53,8 +53,10 @@ internal fun ConnectionDiagram(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = if (isBusy) 900 else 1800),
-            repeatMode = RepeatMode.Restart,
+            animation = tween(durationMillis = if (isBusy) 900 else 1600),
+            // Пока идёт подключение — бежим в одну сторону, как «пытаемся достучаться».
+            // Когда туннель поднят — ходим туда-сюда: связь двусторонняя.
+            repeatMode = if (isBusy) RepeatMode.Restart else RepeatMode.Reverse,
         ),
         label = "phase",
     )
@@ -91,18 +93,21 @@ internal fun ConnectionDiagram(
                             cap = StrokeCap.Round,
                         )
 
-                        // Подсветка пробегает слева направо — от телефона к дому.
-                        val head = size.width * phase
-                        val tail = (head - size.width * 0.35f).coerceAtLeast(0f)
+                        // Симметричное пятно: у него нет «головы», поэтому оно одинаково
+                        // выглядит и на пути туда, и на пути обратно.
+                        val center = size.width * phase
+                        val half = size.width * 0.22f
+                        val from = (center - half).coerceAtLeast(0f)
+                        val to = (center + half).coerceAtMost(size.width)
 
                         drawLine(
                             brush = Brush.horizontalGradient(
-                                colors = listOf(Color.Transparent, activeColor),
-                                startX = tail,
-                                endX = head,
+                                colors = listOf(Color.Transparent, activeColor, Color.Transparent),
+                                startX = from,
+                                endX = to,
                             ),
-                            start = Offset(tail, y),
-                            end = Offset(head, y),
+                            start = Offset(from, y),
+                            end = Offset(to, y),
                             strokeWidth = 10f,
                             cap = StrokeCap.Round,
                         )

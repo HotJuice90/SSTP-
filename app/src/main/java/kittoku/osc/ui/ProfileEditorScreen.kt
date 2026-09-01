@@ -5,7 +5,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -36,6 +37,7 @@ import kittoku.osc.preference.OscPrefKey
  * правит пять полей подключения поверх снимка, не трогая остальные настройки
  * профиля. Новый профиль берёт за основу текущие настройки приложения.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun ProfileEditorScreen(
     prefs: PrefsRepository,
@@ -119,7 +121,10 @@ internal fun ProfileEditorScreen(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
             PROFILE_ICONS.forEachIndexed { index, icon ->
                 val isSelected = index == iconIndex
 
