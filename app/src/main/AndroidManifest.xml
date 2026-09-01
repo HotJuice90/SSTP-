@@ -51,6 +51,11 @@
             <intent-filter>
                 <action android:name="android.net.VpnService" />
             </intent-filter>
+            <!-- Включает системный «Always-on VPN» и «Блокировать соединения без VPN»
+                 в настройках Android, то есть killswitch без собственной реализации. -->
+            <meta-data
+                android:name="android.net.VpnService.SUPPORTS_ALWAYS_ON"
+                android:value="true" />
         </service>
 
         <service
