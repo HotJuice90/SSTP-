@@ -12,6 +12,8 @@ internal enum class OscPrefKey {
     HOME_PASSWORD,
     HOME_CONNECTOR,
     HOME_STATUS,
+    HOME_STATE,
+    HOME_CONNECTED_AT,
     SSL_PORT,
     SSL_VERSION,
     SSL_DO_VERIFY,
@@ -82,6 +84,13 @@ internal val DEFAULT_INT_MAP = mapOf(
 )
 
 private const val EMPTY_TEXT = ""
+
+// Состояние соединения для UI. ROOT_STATE остаётся каналом «сервис ↔ плитка»
+// и отвечает лишь на вопрос «сервис жив», а здесь нужна градация.
+internal const val STATE_DISCONNECTED = "DISCONNECTED"
+internal const val STATE_CONNECTING = "CONNECTING"
+internal const val STATE_CONNECTED = "CONNECTED"
+internal const val STATE_RECONNECTING = "RECONNECTING"
 internal const val LIST_TYPE_ALLOWED = "Allowed Apps"
 internal const val LIST_TYPE_DISALLOWED = "Disallowed Apps"
 
@@ -90,6 +99,8 @@ internal val DEFAULT_STRING_MAP = mapOf(
     OscPrefKey.HOME_USERNAME to EMPTY_TEXT,
     OscPrefKey.HOME_PASSWORD to EMPTY_TEXT,
     OscPrefKey.HOME_STATUS to EMPTY_TEXT,
+    OscPrefKey.HOME_STATE to STATE_DISCONNECTED,
+    OscPrefKey.HOME_CONNECTED_AT to EMPTY_TEXT,
     OscPrefKey.SSL_VERSION to "DEFAULT",
     OscPrefKey.SSL_CUSTOM_SNI to EMPTY_TEXT,
     OscPrefKey.PROXY_HOSTNAME to EMPTY_TEXT,
@@ -106,6 +117,12 @@ private val EMPTY_SET = setOf<String>()
 internal const val AUTH_PROTOCOl_PAP = "PAP"
 internal const val AUTH_PROTOCOL_MSCHAPv2 = "MSCHAPv2"
 internal const val AUTH_PROTOCOL_EAP_MSCHAPv2 = "EAP-MSCHAPv2"
+
+internal val AUTH_PROTOCOL_LIST = listOf(
+    AUTH_PROTOCOl_PAP,
+    AUTH_PROTOCOL_MSCHAPv2,
+    AUTH_PROTOCOL_EAP_MSCHAPv2,
+)
 
 internal val DEFAULT_SET_MAP = mapOf(
     OscPrefKey.SSL_SUITES to EMPTY_SET,

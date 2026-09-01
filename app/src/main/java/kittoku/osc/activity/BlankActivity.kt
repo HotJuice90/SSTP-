@@ -1,54 +1,55 @@
 package kittoku.osc.activity
 
+import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.Fragment
-import home.keenetic.sstp.R
-import home.keenetic.sstp.databinding.ActivityBlankBinding
-import kittoku.osc.fragment.AppsFragment
-import kittoku.osc.fragment.ProfilesFragment
-import kittoku.osc.fragment.SaveCertFragment
+import androidx.activity.ComponentActivity
+import androidx.activity.result.contract.ActivityResultContracts
+import java.io.BufferedOutputStream
 
 
-internal const val BLANK_ACTIVITY_TYPE_PROFILES = 0
-internal const val BLANK_ACTIVITY_TYPE_APPS = 1
 internal const val BLANK_ACTIVITY_TYPE_SAVE_CERT = 2
 
 internal const val EXTRA_KEY_TYPE = "TYPE"
 internal const val EXTRA_KEY_CERT = "CERT"
 internal const val EXTRA_KEY_FILENAME = "FILENAME"
 
-class BlankActivity : AppCompatActivity() {
+/**
+ * Невидимая активити под одну задачу: сохранить сертификат сервера, предложенный
+ * в уведомлении, туда, куда укажет пользователь. Своего UI у неё нет — сразу
+ * открывается системный диалог создания файла.
+ */
+class BlankActivity : ComponentActivity() {
+    private val launcher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            result.data?.data?.also { uri ->
+                contentResolver.openOutputStream(uri, "w")?.also { stream ->
+                    BufferedOutputStream(stream).use {
+                        it.write(intent.getByteArrayExtra(EXTRA_KEY_CERT))
+                    }
+                }
+            }
+        }
+
+        finish()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val fragment: Fragment
-
-        when (intent.extras!!.getInt(EXTRA_KEY_TYPE)) {
-            BLANK_ACTIVITY_TYPE_PROFILES -> {
-                title = "Profiles"
-                fragment = ProfilesFragment()
-            }
-
-            BLANK_ACTIVITY_TYPE_APPS -> {
-                title = "Allowed/Disallowed Apps"
-                fragment = AppsFragment()
-            }
-
-            BLANK_ACTIVITY_TYPE_SAVE_CERT -> {
-                fragment = SaveCertFragment(intent)
-            }
-
-            else -> throw NotImplementedError(intent.toString())
+        if (intent.extras?.getInt(EXTRA_KEY_TYPE) != BLANK_ACTIVITY_TYPE_SAVE_CERT) {
+            finish()
+            return
         }
 
-        val binding = ActivityBlankBinding.inflate(layoutInflater)
-        binding.root.fitsSystemWindows = true
-        setContentView(binding.root)
+        Intent(Intent.ACTION_CREATE_DOCUMENT).also {
+            it.addCategory(Intent.CATEGORY_OPENABLE)
+            it.setType("application/x-x509-ca-cert")
+            it.putExtra(Intent.EXTRA_TITLE, intent.getStringExtra(EXTRA_KEY_FILENAME))
 
-        supportFragmentManager.beginTransaction().also {
-            it.replace(R.id.blank, fragment)
-            it.commit()
+            launcher.launch(it)
         }
     }
 }

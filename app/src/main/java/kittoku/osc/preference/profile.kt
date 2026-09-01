@@ -25,6 +25,8 @@ private val EXCLUDED_BOOLEAN_PREFERENCES = arrayOf(
 
 private val EXCLUDED_STRING_PREFERENCES = arrayOf(
     OscPrefKey.HOME_STATUS,
+    OscPrefKey.HOME_STATE,
+    OscPrefKey.HOME_CONNECTED_AT,
 )
 
 @Serializable
@@ -99,12 +101,4 @@ internal fun importProfile(profile: Profile?, prefs: SharedPreferences) {
         val value = profile?.uriSetting[it.name]?.toUri() ?: DEFAULT_URI_MAP.getValue(it)
         setURIPrefValue(value, it, prefs)
     }
-}
-
-internal fun summarizeProfile(profile: Profile): String {
-    val hostname = profile.stringSetting[OscPrefKey.HOME_HOSTNAME.name]
-    val username = profile.stringSetting[OscPrefKey.HOME_USERNAME.name]
-    val portNumber = profile.intSetting[OscPrefKey.SSL_PORT.name].toString()
-
-    return "[Hostname]\n$hostname\n\n[Username]\n$username\n\n[Port Number]\n$portNumber"
 }

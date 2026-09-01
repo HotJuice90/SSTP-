@@ -1,0 +1,169 @@
+<resources>
+    <!-- navigation -->
+    <string name="nav_home">Главная</string>
+    <string name="nav_connection">Подключение</string>
+    <string name="nav_settings">Настройки</string>
+    <string name="nav_profiles">Профили</string>
+    <string name="nav_apps">Приложения</string>
+    <string name="action_back">Назад</string>
+    <string name="action_more">Ещё</string>
+
+    <!-- connection state -->
+    <string name="state_disconnected">Отключено</string>
+    <string name="state_connecting">Подключение</string>
+    <string name="state_connected">Подключено</string>
+    <string name="state_reconnecting">Переподключение</string>
+    <string name="action_connect">Подключиться</string>
+    <string name="action_disconnect">Отключиться</string>
+    <string name="uptime">На связи %1$s</string>
+    <string name="no_host">Сервер не указан</string>
+
+    <!-- status details -->
+    <string name="status_title">Детали соединения</string>
+    <string name="status_empty">Соединение не установлено</string>
+    <string name="status_protocol">Версия TLS</string>
+    <string name="status_suite">Шифронабор</string>
+    <string name="status_ip">Выданный IP-адрес</string>
+    <string name="status_dns">DNS-сервер</string>
+    <string name="status_dns_none">Не указан</string>
+    <string name="status_routes">Маршруты</string>
+    <string name="status_apps">Приложения в туннеле</string>
+
+    <!-- connection profile -->
+    <string name="pref_hostname">Сервер</string>
+    <string name="pref_hostname_hint">vpn.example.com</string>
+    <string name="pref_port">Порт</string>
+    <string name="pref_username">Логин</string>
+    <string name="pref_password">Пароль</string>
+    <string name="show_password">Показать пароль</string>
+    <string name="hide_password">Скрыть пароль</string>
+
+    <!-- settings groups -->
+    <string name="group_ssl">TLS</string>
+    <string name="group_ppp">PPP</string>
+    <string name="group_auth">Аутентификация</string>
+    <string name="group_dns">DNS</string>
+    <string name="group_route">Маршрутизация</string>
+    <string name="group_reconnection">Переподключение</string>
+    <string name="group_log">Журнал</string>
+    <string name="group_advanced">Дополнительно</string>
+    <string name="group_advanced_summary">Отладочные опции: прокси, шифронаборы, свой SNI, собственное хранилище сертификатов</string>
+
+    <!-- ssl -->
+    <string name="pref_ssl_version">Версия TLS</string>
+    <string name="pref_ssl_do_verify">Проверять сертификат сервера</string>
+    <string name="pref_ssl_do_verify_summary">Выключать только если понимаешь зачем</string>
+    <string name="pref_ssl_do_specify_cert">Своё хранилище сертификатов</string>
+    <string name="pref_ssl_cert_dir">Папка с сертификатами</string>
+    <string name="pref_ssl_do_select_suites">Выбирать шифронаборы вручную</string>
+    <string name="pref_ssl_suites">Шифронаборы</string>
+    <string name="pref_ssl_do_use_custom_sni">Свой SNI</string>
+    <string name="pref_ssl_custom_sni">Имя хоста для SNI</string>
+
+    <!-- proxy -->
+    <string name="pref_proxy_do_use">Использовать HTTP-прокси</string>
+    <string name="pref_proxy_hostname">Хост прокси</string>
+    <string name="pref_proxy_port">Порт прокси</string>
+    <string name="pref_proxy_username">Логин прокси</string>
+    <string name="pref_proxy_password">Пароль прокси</string>
+
+    <!-- ppp -->
+    <string name="pref_ppp_mru">MRU</string>
+    <string name="pref_ppp_mru_summary">Максимальный размер кадра, который мы готовы принять от пира</string>
+    <string name="pref_ppp_mtu">MTU</string>
+    <string name="pref_ppp_mtu_summary">Размер исходящих кадров. 1350 оставляет запас на операторов с меньшим path MTU</string>
+    <string name="pref_ppp_auth_protocols">Протоколы аутентификации</string>
+    <string name="pref_ppp_auth_timeout">Таймаут аутентификации, с</string>
+    <string name="pref_ppp_ipv4">IPv4</string>
+    <string name="pref_ppp_static_ipv4_enabled">Запрашивать статический IPv4</string>
+    <string name="pref_ppp_static_ipv4">Статический адрес IPv4</string>
+    <string name="pref_ppp_ipv6">IPv6</string>
+
+    <!-- dns -->
+    <string name="pref_dns_do_request">Запрашивать адрес у сервера</string>
+    <string name="pref_dns_do_use_custom">Свой DNS-сервер</string>
+    <string name="pref_dns_custom_address">Адрес DNS-сервера</string>
+    <string name="pref_dns_custom_address_note">Трафик к этому адресу уходит в туннель</string>
+
+    <!-- routing -->
+    <string name="pref_route_default">Маршрут по умолчанию (весь трафик в туннель)</string>
+    <string name="pref_route_private">Маршрутизировать частные диапазоны</string>
+    <string name="pref_route_custom_enabled">Свои маршруты</string>
+    <string name="pref_route_custom">Список маршрутов</string>
+    <string name="pref_route_custom_hint">192.168.1.0/24\n2001:db8::/32</string>
+    <string name="pref_route_app_rule">Только выбранные приложения</string>
+    <string name="pref_route_app_list_type">Тип списка</string>
+    <string name="list_type_allowed">Разрешённые приложения</string>
+    <string name="list_type_disallowed">Запрещённые приложения</string>
+    <string name="pref_route_selected_apps">Выбрать приложения</string>
+    <string name="apps_selected_none">Ничего не выбрано</string>
+    <string name="apps_selected_count">Выбрано: %1$d</string>
+    <string name="apps_rule_needs_default_route">Правилам по приложениям нужен включённый маршрут по умолчанию, иначе выбранные приложения всё равно не пойдут в туннель</string>
+
+    <!-- apps screen -->
+    <string name="apps_search">Поиск</string>
+    <string name="apps_show_background">Показывать приложения без значка запуска</string>
+    <string name="apps_select_all">Выбрать все</string>
+    <string name="apps_unselect_all">Снять выбор</string>
+    <string name="apps_nothing_found">Ничего не найдено</string>
+
+    <!-- reconnection -->
+    <string name="pref_reconnection_enabled">Переподключаться автоматически</string>
+    <string name="pref_reconnection_summary">При смене сети туннель поднимается сразу, при недоступном сервере паузы растут от 1 с до 60 с</string>
+
+    <!-- log -->
+    <string name="pref_log_do_save">Сохранять журнал в файл</string>
+    <string name="pref_log_dir">Папка для журнала</string>
+    <string name="pref_log_note">Файл создаётся в момент подключения, так что включай до коннекта</string>
+    <string name="dir_not_selected">Не выбрана</string>
+    <string name="dir_select">Выбрать</string>
+
+    <!-- profiles -->
+    <string name="profiles_saved">Сохранённые профили</string>
+    <string name="profiles_empty">Сохранённых профилей нет</string>
+    <string name="profile_save">Сохранить текущий профиль</string>
+    <string name="profile_save_hint">Название профиля</string>
+    <string name="profile_save_message">Если оставить пустым, будет использовано имя сервера. Профиль с таким же названием будет перезаписан.</string>
+    <string name="profile_load">Загрузить</string>
+    <string name="profile_delete">Удалить</string>
+    <string name="profile_import">Импорт из файла</string>
+    <string name="profile_export">Экспорт в файл</string>
+    <string name="profile_export_warning">Пароль выгружается открытым текстом. Если это нежелательно, очисти его перед экспортом.</string>
+    <string name="profile_reload_defaults">Сбросить все настройки</string>
+    <string name="profile_reload_message">Сбросить все настройки к значениям по умолчанию?</string>
+    <string name="profile_saved_toast">Профиль сохранён</string>
+    <string name="profile_loaded_toast">Профиль загружен</string>
+    <string name="profile_deleted_toast">Профиль удалён</string>
+    <string name="profile_imported_toast">Профиль импортирован</string>
+    <string name="profile_exported_toast">Профиль экспортирован</string>
+    <string name="profile_import_failed_toast">Не удалось прочитать профиль</string>
+    <string name="profile_invalid_toast">Профиль повреждён</string>
+    <string name="defaults_reloaded_toast">Настройки сброшены</string>
+
+    <!-- dialogs -->
+    <string name="action_ok">ОК</string>
+    <string name="action_cancel">Отмена</string>
+    <string name="action_save">Сохранить</string>
+    <string name="action_proceed">Продолжить</string>
+    <string name="action_reset">Сбросить</string>
+    <string name="action_edit">Изменить</string>
+
+    <!-- validation -->
+    <string name="invalid_setting">Неверная настройка: %1$s</string>
+    <string name="check_hostname">не указан сервер</string>
+    <string name="check_port">порт вне диапазона 0–65535</string>
+    <string name="check_cert_version">своему хранилищу сертификатов нужна явная версия TLS</string>
+    <string name="check_cert_dir">не выбрана папка с сертификатами</string>
+    <string name="check_suites">не выбран ни один шифронабор</string>
+    <string name="check_sni">пустое имя хоста для SNI</string>
+    <string name="check_proxy_hostname">не указан хост прокси</string>
+    <string name="check_proxy_port">порт прокси вне диапазона 0–65535</string>
+    <string name="check_mru">MRU вне диапазона %1$d–%2$d</string>
+    <string name="check_mtu">MTU вне диапазона %1$d–%2$d</string>
+    <string name="check_no_protocol">не включён ни IPv4, ни IPv6</string>
+    <string name="check_static_ipv4">не задан статический адрес IPv4</string>
+    <string name="check_auth">не выбран протокол аутентификации</string>
+    <string name="check_auth_timeout">таймаут аутентификации должен быть не меньше 1 секунды</string>
+    <string name="check_dns">не задан адрес DNS-сервера</string>
+    <string name="check_log_dir">не выбрана папка для журнала</string>
+</resources>

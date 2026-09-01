@@ -25,9 +25,14 @@ import kittoku.osc.control.Controller
 import kittoku.osc.control.LogWriter
 import kittoku.osc.control.UnderlyingNetworkObserver
 import kittoku.osc.preference.OscPrefKey
+import kittoku.osc.preference.STATE_CONNECTED
+import kittoku.osc.preference.STATE_CONNECTING
+import kittoku.osc.preference.STATE_DISCONNECTED
+import kittoku.osc.preference.STATE_RECONNECTING
 import kittoku.osc.preference.accessor.getBooleanPrefValue
 import kittoku.osc.preference.accessor.getURIPrefValue
 import kittoku.osc.preference.accessor.setBooleanPrefValue
+import kittoku.osc.preference.accessor.setStringPrefValue
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -89,6 +94,12 @@ internal class SstpVpnService : VpnService() {
         setBooleanPrefValue(state, OscPrefKey.ROOT_STATE, prefs)
     }
 
+    // ROOT_STATE отвечает только на вопрос «сервис жив» — на нём висит плитка в
+    // шторке. Экрану нужна градация, поэтому состояние публикуется отдельно.
+    private fun setUiState(state: String) {
+        setStringPrefValue(state, OscPrefKey.HOME_STATE, prefs)
+    }
+
     private fun requestTileListening() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             TileService.requestListeningState(this,
@@ -133,6 +144,7 @@ internal class SstpVpnService : VpnService() {
                 initializeClient()
                 startNetworkObserver()
 
+                setUiState(STATE_CONNECTING)
                 setRootState(true)
 
                 START_STICKY
@@ -206,6 +218,9 @@ internal class SstpVpnService : VpnService() {
     }
 
     internal fun launchJobReconnect() {
+        setUiState(STATE_RECONNECTING)
+        setStringPrefValue("", OscPrefKey.HOME_CONNECTED_AT, prefs)
+
         jobReconnect = scope.launch {
             try {
                 val isImmediate = isImmediateReconnectRequested
@@ -236,6 +251,13 @@ internal class SstpVpnService : VpnService() {
     // начинать отсчёт пауз заново, а не с того места, где закончился прошлый.
     internal fun onConnected() {
         reconnectAttempt = 0
+
+        setUiState(STATE_CONNECTED)
+        setStringPrefValue(
+            System.currentTimeMillis().toString(),
+            OscPrefKey.HOME_CONNECTED_AT,
+            prefs
+        )
 
         reconnectStartedAt.also {
             if (it > 0L) {
@@ -381,6 +403,8 @@ internal class SstpVpnService : VpnService() {
 
         scope.cancel()
 
+        setUiState(STATE_DISCONNECTED)
+        setStringPrefValue("", OscPrefKey.HOME_CONNECTED_AT, prefs)
         setRootState(false)
         prefs.unregisterOnSharedPreferenceChangeListener(listener)
     }

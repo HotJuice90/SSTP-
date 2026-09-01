@@ -13,6 +13,15 @@ import kittoku.osc.preference.accessor.getStringPrefValue
 import kittoku.osc.preference.accessor.setStringPrefValue
 
 
+internal const val STATUS_KEY_PROTOCOL = "PROTOCOL"
+internal const val STATUS_KEY_SUITE = "SUITE"
+internal const val STATUS_KEY_IP = "IP"
+internal const val STATUS_KEY_DNS = "DNS"
+internal const val STATUS_KEY_ROUTE = "ROUTE"
+internal const val STATUS_KEY_APP_LIST_TYPE = "APP_LIST_TYPE"
+internal const val STATUS_KEY_APP = "APP"
+
+
 internal class NetworkObserver(val bridge: SharedBridge) {
     private val manager = bridge.service.getSystemService(ConnectivityManager::class.java)
     private val callback: ConnectivityManager.NetworkCallback
@@ -44,51 +53,42 @@ internal class NetworkObserver(val bridge: SharedBridge) {
         manager.registerNetworkCallback(request, callback)
     }
 
+    // Статус пишется парами KEY=value: подписи рисует UI, поэтому их можно
+    // переводить, не трогая эту сторону. Значения — как их отдаёт система.
     private fun updateSummary(properties: LinkProperties) {
         val summary = mutableListOf<String>()
 
         bridge.sslTerminal!!.getSession().also {
             if (!it.isValid) return
 
-            summary.add("[SSL/TLS Parameters]")
-            summary.add("PROTOCOL: ${it.protocol}")
-            summary.add("SUITE: ${it.cipherSuite}")
+            summary.add("$STATUS_KEY_PROTOCOL=${it.protocol}")
+            summary.add("$STATUS_KEY_SUITE=${it.cipherSuite}")
         }
-        summary.add("")
 
-        summary.add("[Assigned IP Address]")
         properties.linkAddresses.forEach {
-            summary.add(it.address.hostAddress ?: "")
-        }
-        summary.add("")
-
-        summary.add("[DNS Server Address]")
-        if (properties.dnsServers.isNotEmpty()) {
-            properties.dnsServers.forEach {
-                summary.add(it.hostAddress ?: "")
+            it.address.hostAddress?.also { address ->
+                summary.add("$STATUS_KEY_IP=$address")
             }
-        } else {
-            summary.add("Not specified")
         }
-        summary.add("")
 
-        summary.add("[Routing]")
-        properties.routes.forEach {
-            summary.add(it.toString())
+        properties.dnsServers.forEach {
+            it.hostAddress?.also { address ->
+                summary.add("$STATUS_KEY_DNS=$address")
+            }
         }
-        summary.add("")
+
+        properties.routes.forEach {
+            summary.add("$STATUS_KEY_ROUTE=$it")
+        }
 
         val doEnableAppBasedRule = getBooleanPrefValue(OscPrefKey.ROUTE_DO_ENABLE_APP_BASED_RULE, bridge.prefs)
         if (doEnableAppBasedRule) {
-            summary.add("[${getStringPrefValue(OscPrefKey.ROUTE_APP_LIST_TYPE, bridge.prefs)}]")
-            bridge.selectedApps.forEach { summary.add(it.label) }
+            val listType = getStringPrefValue(OscPrefKey.ROUTE_APP_LIST_TYPE, bridge.prefs)
+            summary.add("$STATUS_KEY_APP_LIST_TYPE=$listType")
+            bridge.selectedApps.forEach { summary.add("$STATUS_KEY_APP=${it.label}") }
         }
 
-        summary.reduce { acc, s ->
-            acc + "\n" + s
-        }.also {
-            setStringPrefValue(it, OscPrefKey.HOME_STATUS, bridge.prefs)
-        }
+        setStringPrefValue(summary.joinToString("\n"), OscPrefKey.HOME_STATUS, bridge.prefs)
     }
 
     private fun wipeStatus() {

@@ -1,3 +1,171 @@
 <resources>
     <string name="app_name">SSTP+</string>
+
+    <!-- navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_connection">Connection</string>
+    <string name="nav_settings">Settings</string>
+    <string name="nav_profiles">Profiles</string>
+    <string name="nav_apps">Apps</string>
+    <string name="action_back">Back</string>
+    <string name="action_more">More</string>
+
+    <!-- connection state -->
+    <string name="state_disconnected">Disconnected</string>
+    <string name="state_connecting">Connecting</string>
+    <string name="state_connected">Connected</string>
+    <string name="state_reconnecting">Reconnecting</string>
+    <string name="action_connect">Connect</string>
+    <string name="action_disconnect">Disconnect</string>
+    <string name="uptime">Connected for %1$s</string>
+    <string name="no_host">No server specified</string>
+
+    <!-- status details -->
+    <string name="status_title">Connection details</string>
+    <string name="status_empty">No connection established</string>
+    <string name="status_protocol">TLS version</string>
+    <string name="status_suite">Cipher suite</string>
+    <string name="status_ip">Assigned IP address</string>
+    <string name="status_dns">DNS server</string>
+    <string name="status_dns_none">Not specified</string>
+    <string name="status_routes">Routes</string>
+    <string name="status_apps">Apps in tunnel</string>
+
+    <!-- connection profile -->
+    <string name="pref_hostname">Server</string>
+    <string name="pref_hostname_hint">vpn.example.com</string>
+    <string name="pref_port">Port</string>
+    <string name="pref_username">Username</string>
+    <string name="pref_password">Password</string>
+    <string name="show_password">Show password</string>
+    <string name="hide_password">Hide password</string>
+
+    <!-- settings groups -->
+    <string name="group_ssl">TLS</string>
+    <string name="group_ppp">PPP</string>
+    <string name="group_auth">Authentication</string>
+    <string name="group_dns">DNS</string>
+    <string name="group_route">Routing</string>
+    <string name="group_reconnection">Reconnection</string>
+    <string name="group_log">Log</string>
+    <string name="group_advanced">Advanced</string>
+    <string name="group_advanced_summary">Debug options: proxy, cipher suites, custom SNI, own certificate store</string>
+
+    <!-- ssl -->
+    <string name="pref_ssl_version">TLS version</string>
+    <string name="pref_ssl_do_verify">Verify server certificate</string>
+    <string name="pref_ssl_do_verify_summary">Turn off only if you know why</string>
+    <string name="pref_ssl_do_specify_cert">Use own certificate store</string>
+    <string name="pref_ssl_cert_dir">Certificate directory</string>
+    <string name="pref_ssl_do_select_suites">Select cipher suites manually</string>
+    <string name="pref_ssl_suites">Cipher suites</string>
+    <string name="pref_ssl_do_use_custom_sni">Custom SNI</string>
+    <string name="pref_ssl_custom_sni">SNI hostname</string>
+
+    <!-- proxy -->
+    <string name="pref_proxy_do_use">Use HTTP proxy</string>
+    <string name="pref_proxy_hostname">Proxy host</string>
+    <string name="pref_proxy_port">Proxy port</string>
+    <string name="pref_proxy_username">Proxy username</string>
+    <string name="pref_proxy_password">Proxy password</string>
+
+    <!-- ppp -->
+    <string name="pref_ppp_mru">MRU</string>
+    <string name="pref_ppp_mru_summary">Maximum frame size we accept from the peer</string>
+    <string name="pref_ppp_mtu">MTU</string>
+    <string name="pref_ppp_mtu_summary">Outgoing frame size. 1350 leaves room for carriers with a smaller path MTU</string>
+    <string name="pref_ppp_auth_protocols">Authentication protocols</string>
+    <string name="pref_ppp_auth_timeout">Authentication timeout, s</string>
+    <string name="pref_ppp_ipv4">IPv4</string>
+    <string name="pref_ppp_static_ipv4_enabled">Request a static IPv4 address</string>
+    <string name="pref_ppp_static_ipv4">Static IPv4 address</string>
+    <string name="pref_ppp_ipv6">IPv6</string>
+
+    <!-- dns -->
+    <string name="pref_dns_do_request">Request address from the server</string>
+    <string name="pref_dns_do_use_custom">Custom DNS server</string>
+    <string name="pref_dns_custom_address">DNS server address</string>
+    <string name="pref_dns_custom_address_note">Traffic to this address is routed into the tunnel</string>
+
+    <!-- routing -->
+    <string name="pref_route_default">Default route (all traffic into the tunnel)</string>
+    <string name="pref_route_private">Route private address ranges</string>
+    <string name="pref_route_custom_enabled">Custom routes</string>
+    <string name="pref_route_custom">Route list</string>
+    <string name="pref_route_custom_hint">192.168.1.0/24\n2001:db8::/32</string>
+    <string name="pref_route_app_rule">Only selected apps</string>
+    <string name="pref_route_app_list_type">List type</string>
+    <string name="list_type_allowed">Allowed apps</string>
+    <string name="list_type_disallowed">Disallowed apps</string>
+    <string name="pref_route_selected_apps">Select apps</string>
+    <string name="apps_selected_none">No app selected</string>
+    <string name="apps_selected_count">%1$d selected</string>
+    <string name="apps_rule_needs_default_route">App based rules need the default route enabled, otherwise the selected apps will not use the tunnel</string>
+
+    <!-- apps screen -->
+    <string name="apps_search">Search</string>
+    <string name="apps_show_background">Show apps without a launcher icon</string>
+    <string name="apps_select_all">Select all</string>
+    <string name="apps_unselect_all">Clear selection</string>
+    <string name="apps_nothing_found">Nothing found</string>
+
+    <!-- reconnection -->
+    <string name="pref_reconnection_enabled">Reconnect automatically</string>
+    <string name="pref_reconnection_summary">On a network change the tunnel is rebuilt at once; if the server is unreachable, retries back off from 1 s up to 60 s</string>
+
+    <!-- log -->
+    <string name="pref_log_do_save">Save log to a file</string>
+    <string name="pref_log_dir">Log directory</string>
+    <string name="pref_log_note">The file is created when the connection starts, so enable this before connecting</string>
+    <string name="dir_not_selected">Not selected</string>
+    <string name="dir_select">Select</string>
+
+    <!-- profiles -->
+    <string name="profiles_saved">Saved profiles</string>
+    <string name="profiles_empty">No saved profiles</string>
+    <string name="profile_save">Save current profile</string>
+    <string name="profile_save_hint">Profile name</string>
+    <string name="profile_save_message">If left blank, the server name is used. An existing profile with the same name is overwritten.</string>
+    <string name="profile_load">Load</string>
+    <string name="profile_delete">Delete</string>
+    <string name="profile_import">Import from file</string>
+    <string name="profile_export">Export to file</string>
+    <string name="profile_export_warning">The password is exported as plain text. Clear it before exporting if that is not what you want.</string>
+    <string name="profile_reload_defaults">Reset all settings</string>
+    <string name="profile_reload_message">Reset all settings to defaults?</string>
+    <string name="profile_saved_toast">Profile saved</string>
+    <string name="profile_loaded_toast">Profile loaded</string>
+    <string name="profile_deleted_toast">Profile deleted</string>
+    <string name="profile_imported_toast">Profile imported</string>
+    <string name="profile_exported_toast">Profile exported</string>
+    <string name="profile_import_failed_toast">Could not read the profile</string>
+    <string name="profile_invalid_toast">Broken profile</string>
+    <string name="defaults_reloaded_toast">Settings reset</string>
+
+    <!-- dialogs -->
+    <string name="action_ok">OK</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_save">Save</string>
+    <string name="action_proceed">Proceed</string>
+    <string name="action_reset">Reset</string>
+    <string name="action_edit">Edit</string>
+
+    <!-- validation -->
+    <string name="invalid_setting">Wrong setting: %1$s</string>
+    <string name="check_hostname">the server is not specified</string>
+    <string name="check_port">the port is outside 0–65535</string>
+    <string name="check_cert_version">an own certificate store requires an explicit TLS version</string>
+    <string name="check_cert_dir">no certificate directory selected</string>
+    <string name="check_suites">no cipher suite selected</string>
+    <string name="check_sni">the SNI hostname is empty</string>
+    <string name="check_proxy_hostname">the proxy host is not specified</string>
+    <string name="check_proxy_port">the proxy port is outside 0–65535</string>
+    <string name="check_mru">MRU is outside %1$d–%2$d</string>
+    <string name="check_mtu">MTU is outside %1$d–%2$d</string>
+    <string name="check_no_protocol">neither IPv4 nor IPv6 is enabled</string>
+    <string name="check_static_ipv4">no static IPv4 address given</string>
+    <string name="check_auth">no authentication protocol selected</string>
+    <string name="check_auth_timeout">the authentication timeout must be at least 1 second</string>
+    <string name="check_dns">no DNS server address given</string>
+    <string name="check_log_dir">no log directory selected</string>
 </resources>
