@@ -435,6 +435,8 @@ internal class SstpVpnService : VpnService() {
             it.setAutoCancel(false)
             it.setShowWhen(false)
             it.setCategory(NotificationCompat.CATEGORY_SERVICE)
+            // Иначе часть прошивок прячет содержимое тихого уведомления с локскрина
+            it.setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             it.setSmallIcon(R.drawable.ic_stat_sstp)
             it.setContentTitle(title)
             it.setContentText(stateText)
