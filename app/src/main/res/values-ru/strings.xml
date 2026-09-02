@@ -193,4 +193,9 @@
     <string name="notification_channel_certificate">Сертификат сервера</string>
     <string name="notification_error_title">Ошибка подключения</string>
     <string name="notification_reconnect_title">Переподключение</string>
+    <string name="notification_traffic">↑ %1$s   ↓ %2$s</string>
+    <string name="notification_session">⏱ %1$s</string>
+    <string name="unit_bytes_per_second">%1$d Б/с</string>
+    <string name="unit_kilobytes_per_second">%1$.1f КБ/с</string>
+    <string name="unit_megabytes_per_second">%1$.1f МБ/с</string>
 </resources>

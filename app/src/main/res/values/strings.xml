@@ -194,4 +194,9 @@
     <string name="notification_channel_certificate">Server certificate</string>
     <string name="notification_error_title">Connection error</string>
     <string name="notification_reconnect_title">Reconnecting</string>
+    <string name="notification_traffic">↑ %1$s   ↓ %2$s</string>
+    <string name="notification_session">⏱ %1$s</string>
+    <string name="unit_bytes_per_second">%1$d B/s</string>
+    <string name="unit_kilobytes_per_second">%1$.1f kB/s</string>
+    <string name="unit_megabytes_per_second">%1$.1f MB/s</string>
 </resources>

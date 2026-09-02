@@ -10,8 +10,10 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.net.Network
+import android.net.TrafficStats
 import android.net.VpnService
 import android.os.Build
+import android.os.Process
 import android.os.SystemClock
 import android.service.quicksettings.TileService
 import androidx.core.app.ActivityCompat
@@ -76,6 +78,7 @@ internal class SstpVpnService : VpnService() {
 
     private var jobReconnect: Job? = null
     private var networkObserver: UnderlyingNetworkObserver? = null
+    private var jobNotification: Job? = null
 
     // Пауза перед попыткой переподключения, в секундах. Дальше последнего элемента
     // не растёт: сервер может быть недоступен часами, а телефон должен подхватить
@@ -367,7 +370,7 @@ internal class SstpVpnService : VpnService() {
      * Постоянное уведомление: имя профиля, состояние, кнопка отключения и переход
      * в приложение по тапу. Раньше здесь была пустая карточка с надписью DISCONNECT.
      */
-    private fun buildOngoingNotification(state: String): Notification {
+    private fun buildOngoingNotification(state: String, traffic: String? = null): Notification {
         val disconnectIntent = PendingIntent.getService(
             this,
             0,
@@ -386,14 +389,20 @@ internal class SstpVpnService : VpnService() {
             .ifEmpty { getStringPrefValue(OscPrefKey.HOME_HOSTNAME, prefs) }
             .ifEmpty { getString(R.string.app_name) }
 
-        val stateText = getString(
-            when (state) {
-                STATE_CONNECTED -> R.string.state_connected
-                STATE_RECONNECTING -> R.string.state_reconnecting
-                STATE_DISCONNECTED -> R.string.state_disconnected
-                else -> R.string.state_connecting
-            }
-        )
+        val stateText = if (state == STATE_CONNECTED) {
+            // Когда туннель поднят, полезнее скорость и время, чем слово «Подключено».
+            listOfNotNull(traffic, formatSessionTime()?.let { getString(R.string.notification_session, it) })
+                .joinToString("  ")
+                .ifEmpty { getString(R.string.state_connected) }
+        } else {
+            getString(
+                when (state) {
+                    STATE_RECONNECTING -> R.string.state_reconnecting
+                    STATE_DISCONNECTED -> R.string.state_disconnected
+                    else -> R.string.state_connecting
+                }
+            )
+        }
 
         return NotificationCompat.Builder(this, NOTIFICATION_DISCONNECT_CHANNEL).also {
             it.priority = NotificationCompat.PRIORITY_LOW
@@ -414,9 +423,90 @@ internal class SstpVpnService : VpnService() {
     }
 
     private fun updateOngoingNotification(state: String) {
-        if (state == STATE_DISCONNECTED) return // сервис уже уходит, карточку снимет система
+        if (state == STATE_DISCONNECTED) {
+            jobNotification?.cancel()
+            return // сервис уже уходит, карточку снимет система
+        }
 
-        tryNotify(buildOngoingNotification(state), NOTIFICATION_DISCONNECT_ID)
+        if (state == STATE_CONNECTED) {
+            launchJobNotification()
+        } else {
+            jobNotification?.cancel()
+            tryNotify(buildOngoingNotification(state), NOTIFICATION_DISCONNECT_ID)
+        }
+    }
+
+    /** Раз в секунду обновляет карточку скоростью и временем сессии. */
+    private fun launchJobNotification() {
+        jobNotification?.cancel()
+
+        jobNotification = scope.launch {
+            val uid = Process.myUid()
+            var lastRx = TrafficStats.getUidRxBytes(uid)
+            var lastTx = TrafficStats.getUidTxBytes(uid)
+            var lastAt = SystemClock.elapsedRealtime()
+
+            tryNotify(buildOngoingNotification(STATE_CONNECTED), NOTIFICATION_DISCONNECT_ID)
+
+            while (true) {
+                delay(1000)
+
+                val now = SystemClock.elapsedRealtime()
+                val rx = TrafficStats.getUidRxBytes(uid)
+                val tx = TrafficStats.getUidTxBytes(uid)
+                val seconds = (now - lastAt).coerceAtLeast(1L) / 1000.0
+
+                val traffic = if (rx < 0 || tx < 0) {
+                    null // счётчики по UID доступны не на всех прошивках
+                } else {
+                    val down = ((rx - lastRx).coerceAtLeast(0L) / seconds).toLong()
+                    val up = ((tx - lastTx).coerceAtLeast(0L) / seconds).toLong()
+
+                    getString(R.string.notification_traffic, formatRate(up), formatRate(down))
+                }
+
+                lastRx = rx
+                lastTx = tx
+                lastAt = now
+
+                tryNotify(
+                    buildOngoingNotification(STATE_CONNECTED, traffic),
+                    NOTIFICATION_DISCONNECT_ID,
+                )
+            }
+        }
+    }
+
+    private fun formatRate(bytesPerSecond: Long): String {
+        return when {
+            bytesPerSecond < 1024 -> getString(R.string.unit_bytes_per_second, bytesPerSecond)
+
+            bytesPerSecond < 1024 * 1024 -> getString(
+                R.string.unit_kilobytes_per_second,
+                bytesPerSecond / 1024.0,
+            )
+
+            else -> getString(
+                R.string.unit_megabytes_per_second,
+                bytesPerSecond / (1024.0 * 1024.0),
+            )
+        }
+    }
+
+    private fun formatSessionTime(): String? {
+        val startedAt = getStringPrefValue(OscPrefKey.HOME_CONNECTED_AT, prefs).toLongOrNull()
+            ?: return null
+
+        val totalSeconds = ((System.currentTimeMillis() - startedAt).coerceAtLeast(0L)) / 1000
+        val seconds = totalSeconds % 60
+        val minutes = (totalSeconds / 60) % 60
+        val hours = totalSeconds / 3600
+
+        return if (hours > 0) {
+            "%d:%02d:%02d".format(hours, minutes, seconds)
+        } else {
+            "%02d:%02d".format(minutes, seconds)
+        }
     }
 
     internal fun notifyMessage(message: String, id: Int, channel: String) {
@@ -467,6 +557,8 @@ internal class SstpVpnService : VpnService() {
         logWriter?.write("Terminate VPN connection")
         logWriter?.close()
         logWriter = null
+
+        jobNotification?.cancel()
 
         controller?.kill(false, null)
         controller = null
