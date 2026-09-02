@@ -61,7 +61,8 @@ internal const val ACTION_VPN_DISCONNECT = "kittoku.osc.disconnect"
 
 internal const val NOTIFICATION_ERROR_CHANNEL = "ERROR"
 internal const val NOTIFICATION_RECONNECT_CHANNEL = "RECONNECT"
-internal const val NOTIFICATION_DISCONNECT_CHANNEL = "DISCONNECT"
+internal const val NOTIFICATION_DISCONNECT_CHANNEL = "STATUS"
+private const val NOTIFICATION_LEGACY_STATUS_CHANNEL = "DISCONNECT"
 internal const val NOTIFICATION_CERTIFICATE_CHANNEL = "CERTIFICATE"
 
 internal const val NOTIFICATION_ERROR_ID = 1
@@ -365,7 +366,9 @@ internal class SstpVpnService : VpnService() {
             Triple(
                 NOTIFICATION_DISCONNECT_CHANNEL,
                 R.string.notification_channel_status,
-                NotificationManager.IMPORTANCE_LOW, // постоянное уведомление не должно звенеть
+                // Тихие уведомления Android прячет с экрана блокировки, поэтому
+                // важность обычная, а молчание задаётся самим уведомлением.
+                NotificationManager.IMPORTANCE_DEFAULT,
             ),
             Triple(
                 NOTIFICATION_RECONNECT_CHANNEL,
@@ -387,6 +390,8 @@ internal class SstpVpnService : VpnService() {
         }.also {
             notificationManager.createNotificationChannels(it)
         }
+
+        notificationManager.deleteNotificationChannel(NOTIFICATION_LEGACY_STATUS_CHANNEL)
 
         startForeground(NOTIFICATION_DISCONNECT_ID, buildOngoingNotification(STATE_CONNECTING))
     }
@@ -431,6 +436,7 @@ internal class SstpVpnService : VpnService() {
 
         return NotificationCompat.Builder(this, NOTIFICATION_DISCONNECT_CHANNEL).also {
             it.priority = NotificationCompat.PRIORITY_LOW
+            it.setSilent(true) // важность обычная ради локскрина, но звука быть не должно
             it.setOngoing(true)
             it.setAutoCancel(false)
             it.setShowWhen(false)

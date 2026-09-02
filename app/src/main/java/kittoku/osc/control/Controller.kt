@@ -1,5 +1,6 @@
 package kittoku.osc.control
 
+import home.keenetic.sstp.R
 import kittoku.osc.ControlMessage
 import kittoku.osc.Result
 import kittoku.osc.SharedBridge
@@ -262,7 +263,14 @@ internal class Controller(internal val bridge: SharedBridge) {
             }
 
             bridge.service.logWriter?.report(log)
-            bridge.service.notifyError(header)
+
+            val notice = if (received.result == Result.ERR_AUTHENTICATION_FAILED) {
+                bridge.service.getString(R.string.error_auth_failed)
+            } else {
+                header
+            }
+
+            bridge.service.notifyError(notice)
         }
 
         return false
