@@ -375,6 +375,24 @@ internal fun MultiSelectSettingRow(
 }
 
 @Composable
+internal fun IntSettingRow(
+    title: String,
+    value: Int,
+    summary: String? = null,
+    enabled: Boolean = true,
+    onValueChange: (Int) -> Unit,
+) {
+    TextSettingRow(
+        title = title,
+        value = value.toString(),
+        enabled = enabled,
+        keyboardType = KeyboardType.Number,
+        note = summary,
+        onValueChange = { text -> text.trim().toIntOrNull()?.also(onValueChange) },
+    )
+}
+
+@Composable
 internal fun ConfirmDialog(
     title: String? = null,
     message: String,

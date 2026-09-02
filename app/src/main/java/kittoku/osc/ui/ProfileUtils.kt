@@ -172,26 +172,6 @@ internal fun saveProfile(
     }
 }
 
-/**
- * Правка полей подключения на экране «Подключение» оседает в активном профиле,
- * иначе она потерялась бы при первом же переключении — именно так камуфляжный путь
- * однажды достался не тому роутеру.
- */
-internal fun syncActiveProfile(prefs: PrefsRepository) {
-    val name = prefs.getString(OscPrefKey.HOME_ACTIVE_PROFILE)
-
-    if (name.isEmpty() || prefs.raw.getString(PROFILE_KEY_HEADER + name, null) == null) return
-
-    val fields = ProfileFields(
-        hostname = prefs.getString(OscPrefKey.HOME_HOSTNAME),
-        port = prefs.getInt(OscPrefKey.SSL_PORT),
-        sstpPath = prefs.getString(OscPrefKey.SSL_SSTP_PATH),
-        username = prefs.getString(OscPrefKey.HOME_USERNAME),
-        password = prefs.getString(OscPrefKey.HOME_PASSWORD),
-    )
-
-    prefs.raw.edit { putString(PROFILE_KEY_HEADER + name, encodeProfile(toProfile(fields))) }
-}
 
 private fun toProfile(fields: ProfileFields): Profile {
     return Profile().also {

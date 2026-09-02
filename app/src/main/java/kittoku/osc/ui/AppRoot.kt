@@ -56,7 +56,6 @@ private enum class Screen(val titleId: Int, val isTab: Boolean) {
     HOME(R.string.app_name, true),
     PROFILES(R.string.nav_profiles, true),
     SETTINGS(R.string.nav_settings, true),
-    CONNECTION(R.string.nav_connection, false),
     APPS(R.string.nav_apps, false),
     PROFILE_EDITOR(R.string.profile_new, false),
     DETAILS(R.string.status_title, false),
@@ -112,6 +111,13 @@ internal fun AppRoot(prefs: PrefsRepository) {
     }
 
     fun connect() {
+        // Подключаться нечем, пока нет ни одного профиля: ведём создавать.
+        if (prefs.getString(OscPrefKey.HOME_HOSTNAME).isEmpty()) {
+            editedProfile = null
+            open(Screen.PROFILE_EDITOR)
+            return
+        }
+
         checkPreferences(prefs.raw)?.also { invalid ->
             val reason = context.getString(invalid.messageId, *invalid.args.toTypedArray())
 
@@ -240,10 +246,7 @@ internal fun AppRoot(prefs: PrefsRepository) {
                 Screen.SETTINGS -> SettingsScreen(
                     prefs = prefs,
                     onOpenApps = { open(Screen.APPS) },
-                    onOpenConnection = { open(Screen.CONNECTION) },
                 )
-
-                Screen.CONNECTION -> ConnectionScreen(prefs)
 
                 Screen.APPS -> AppsScreen(prefs)
 

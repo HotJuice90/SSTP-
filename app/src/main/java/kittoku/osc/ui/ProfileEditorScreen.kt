@@ -12,8 +12,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -27,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import home.keenetic.sstp.R
 import kittoku.osc.preference.OscPrefKey
@@ -55,6 +60,7 @@ internal fun ProfileEditorScreen(
     var sstpPath by remember { mutableStateOf(existing?.sstpPath.orEmpty()) }
     var username by remember { mutableStateOf(existing?.username.orEmpty()) }
     var password by remember { mutableStateOf(existing?.password.orEmpty()) }
+    var isPasswordShown by remember { mutableStateOf(false) }
     var iconIndex by remember {
         mutableStateOf(editedProfile?.let { readProfileIcon(prefs, it) } ?: 0)
     }
@@ -116,8 +122,26 @@ internal fun ProfileEditorScreen(
             onValueChange = { password = it },
             singleLine = true,
             label = { Text(stringResource(R.string.pref_password)) },
-            visualTransformation = PasswordVisualTransformation(),
+            visualTransformation = if (isPasswordShown) {
+                VisualTransformation.None
+            } else {
+                PasswordVisualTransformation()
+            },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            trailingIcon = {
+                IconButton(onClick = { isPasswordShown = !isPasswordShown }) {
+                    Icon(
+                        imageVector = if (isPasswordShown) {
+                            Icons.Filled.VisibilityOff
+                        } else {
+                            Icons.Filled.Visibility
+                        },
+                        contentDescription = stringResource(
+                            if (isPasswordShown) R.string.hide_password else R.string.show_password
+                        ),
+                    )
+                }
+            },
             modifier = Modifier.fillMaxWidth(),
         )
 
