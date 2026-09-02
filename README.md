@@ -16,6 +16,7 @@ Copyright (c) 2020 kittoku — исходный код распространя�
 
 ## Разработка
 
+Справочник по настройкам: [docs/settings.md](docs/settings.md).
 План работ по форку: [docs/fork-tasks.md](docs/fork-tasks.md).
 Правила для агентов и границы «не трогать»: [CLAUDE.md](CLAUDE.md).
 
