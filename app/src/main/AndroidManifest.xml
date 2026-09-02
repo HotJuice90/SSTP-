@@ -62,7 +62,7 @@
         <service
             android:exported="true"
             android:name="kittoku.osc.service.SstpTileService"
-            android:icon="@drawable/ic_baseline_vpn_lock_24"
+            android:icon="@drawable/ic_stat_sstp"
             android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
             <intent-filter>
                 <action android:name="android.service.quicksettings.action.QS_TILE" />

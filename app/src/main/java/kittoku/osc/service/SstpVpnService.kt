@@ -410,7 +410,7 @@ internal class SstpVpnService : VpnService() {
             it.setAutoCancel(false)
             it.setShowWhen(false)
             it.setCategory(NotificationCompat.CATEGORY_SERVICE)
-            it.setSmallIcon(R.drawable.ic_baseline_vpn_lock_24)
+            it.setSmallIcon(R.drawable.ic_stat_sstp)
             it.setContentTitle(title)
             it.setContentText(stateText)
             it.setContentIntent(openIntent)
@@ -517,7 +517,7 @@ internal class SstpVpnService : VpnService() {
         }
 
         NotificationCompat.Builder(this, channel).also {
-            it.setSmallIcon(R.drawable.ic_baseline_vpn_lock_24)
+            it.setSmallIcon(R.drawable.ic_stat_sstp)
             it.setContentTitle(getString(titleId))
             it.setContentText(message)
             it.setStyle(NotificationCompat.BigTextStyle().bigText(message))

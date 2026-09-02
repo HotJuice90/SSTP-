@@ -1,19 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Дом со щитом. Исходник — SVG 20x20, поэтому рисунок вписан в 108x108
-    группой: масштаб 3.25 даёт 65dp глифа, остальное — защитные поля адаптивной
-    иконки. Транслейт второй фигуры из SVG запечён в её первую точку.
+    Значок для статус-бара и уведомлений. Android рисует его как силуэт и красит
+    сам, поэтому фигура сплошная белая, а поля по краю оставлены намеренно:
+    система обрезает иконку до 22dp внутри 24dp.
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="108dp"
-    android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="#FFFFFF">
     <group
-        android:translateX="21.5"
-        android:translateY="21.5"
-        android:scaleX="3.25"
-        android:scaleY="3.25">
+        android:translateX="1"
+        android:translateY="1"
+        android:scaleX="1.1"
+        android:scaleY="1.1">
         <path
             android:fillColor="#FFFFFF"
             android:pathData="m10 .070801-9.988281 6.242676 1.05957 1.696289.928711-.580445v9.570679c0 1.102539.896973 2 2 2h4.020813v-2h-1.020813-3v-10.82074l6-3.750061 6 3.750061 2 1.250061.928711.580444 1.060547-1.696289z" />
