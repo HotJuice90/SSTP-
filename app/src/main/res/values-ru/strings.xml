@@ -126,7 +126,7 @@
     <string name="profile_save">Сохранить текущий профиль</string>
     <string name="profile_save_hint">Название профиля</string>
     <string name="profile_save_message">Если оставить пустым, будет использовано имя сервера. Профиль с таким же названием будет перезаписан.</string>
-    <string name="profile_load">Загрузить</string>
+    <string name="profile_activate">Сделать активным</string>
     <string name="profile_delete">Удалить</string>
     <string name="profile_import">Импорт из файла</string>
     <string name="profile_export">Экспорт в файл</string>

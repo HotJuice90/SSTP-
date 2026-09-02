@@ -93,24 +93,42 @@ internal fun ConnectionDiagram(
                             cap = StrokeCap.Round,
                         )
 
-                        // Симметричное пятно: у него нет «головы», поэтому оно одинаково
-                        // выглядит и на пути туда, и на пути обратно.
-                        val center = size.width * phase
-                        val half = size.width * 0.22f
-                        val from = (center - half).coerceAtLeast(0f)
-                        val to = (center + half).coerceAtMost(size.width)
+                        if (isBusy) {
+                            // Подключение: комета с головой, всегда от телефона к дому.
+                            val head = size.width * phase
+                            val tail = (head - size.width * 0.35f).coerceAtLeast(0f)
 
-                        drawLine(
-                            brush = Brush.horizontalGradient(
-                                colors = listOf(Color.Transparent, activeColor, Color.Transparent),
-                                startX = from,
-                                endX = to,
-                            ),
-                            start = Offset(from, y),
-                            end = Offset(to, y),
-                            strokeWidth = 10f,
-                            cap = StrokeCap.Round,
-                        )
+                            drawLine(
+                                brush = Brush.horizontalGradient(
+                                    colors = listOf(Color.Transparent, activeColor),
+                                    startX = tail,
+                                    endX = head,
+                                ),
+                                start = Offset(tail, y),
+                                end = Offset(head, y),
+                                strokeWidth = 10f,
+                                cap = StrokeCap.Round,
+                            )
+                        } else {
+                            // Туннель поднят: пятно без головы ходит туда-обратно и
+                            // одинаково выглядит в обе стороны.
+                            val center = size.width * phase
+                            val half = size.width * 0.22f
+                            val from = (center - half).coerceAtLeast(0f)
+                            val to = (center + half).coerceAtMost(size.width)
+
+                            drawLine(
+                                brush = Brush.horizontalGradient(
+                                    colors = listOf(Color.Transparent, activeColor, Color.Transparent),
+                                    startX = from,
+                                    endX = to,
+                                ),
+                                start = Offset(from, y),
+                                end = Offset(to, y),
+                                strokeWidth = 10f,
+                                cap = StrokeCap.Round,
+                            )
+                        }
                     } else {
                         drawLine(
                             color = idleColor,

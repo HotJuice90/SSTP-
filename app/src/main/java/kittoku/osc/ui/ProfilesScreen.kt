@@ -247,13 +247,15 @@ private fun ProfileRow(
             }
 
             DropdownMenu(expanded = isMenuShown, onDismissRequest = { isMenuShown = false }) {
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.profile_load)) },
-                    onClick = {
-                        isMenuShown = false
-                        onApply()
-                    },
-                )
+                if (!isActive) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.profile_activate)) },
+                        onClick = {
+                            isMenuShown = false
+                            onApply()
+                        },
+                    )
+                }
 
                 DropdownMenuItem(
                     text = { Text(stringResource(R.string.action_edit)) },

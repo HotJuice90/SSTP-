@@ -127,7 +127,7 @@
     <string name="profile_save">Save current profile</string>
     <string name="profile_save_hint">Profile name</string>
     <string name="profile_save_message">If left blank, the server name is used. An existing profile with the same name is overwritten.</string>
-    <string name="profile_load">Load</string>
+    <string name="profile_activate">Set as active</string>
     <string name="profile_delete">Delete</string>
     <string name="profile_import">Import from file</string>
     <string name="profile_export">Export to file</string>
