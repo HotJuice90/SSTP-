@@ -22,16 +22,17 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.core.content.edit
 import kittoku.osc.preference.OscPrefKey
 import kittoku.osc.preference.PROFILE_KEY_HEADER
-import kittoku.osc.preference.buildProfile
+import kittoku.osc.preference.Profile
 import kittoku.osc.preference.deserializeProfile
 import kittoku.osc.preference.encodeProfile
-import kittoku.osc.preference.importProfile
 
 
-// Значок профиля хранится своим ключом рядом с самим профилем: формат профиля
-// пришёл из апстрима и своих полей под UI не имеет.
+// Значок и отметка последнего использования лежат своими ключами рядом с профилем:
+// формат профиля пришёл из апстрима и своих полей под UI не имеет.
 private const val PROFILE_ICON_HEADER = "PROFILE_ICON."
 private const val PROFILE_USED_HEADER = "PROFILE_USED."
+
+private const val DEFAULT_PORT = 443
 
 // Дописывать только в конец: индекс уже сохранён у существующих профилей.
 internal val PROFILE_ICONS = listOf(
@@ -113,30 +114,31 @@ internal fun readProfileFields(prefs: PrefsRepository, name: String): ProfileFie
 
     return ProfileFields(
         hostname = profile.stringSetting[OscPrefKey.HOME_HOSTNAME.name].orEmpty(),
-        port = profile.intSetting[OscPrefKey.SSL_PORT.name] ?: 443,
+        port = profile.intSetting[OscPrefKey.SSL_PORT.name] ?: DEFAULT_PORT,
         sstpPath = profile.stringSetting[OscPrefKey.SSL_SSTP_PATH.name].orEmpty(),
         username = profile.stringSetting[OscPrefKey.HOME_USERNAME.name].orEmpty(),
         password = profile.stringSetting[OscPrefKey.HOME_PASSWORD.name].orEmpty(),
     )
 }
 
-/** Профиль — это снимок всех настроек, поэтому «переключение» и есть их загрузка. */
+/**
+ * Профиль — это только про то, куда и под кем подключаться: сервер, порт, путь,
+ * логин, пароль. Всё остальное — MTU, маршруты, DNS, TLS, исключения — общее для
+ * телефона и при переключении профиля не меняется.
+ *
+ * Профили, сохранённые до этой версии, хранят снимок всех настроек: они читаются
+ * как есть, но берутся из них только эти пять полей.
+ */
 internal fun applyProfile(prefs: PrefsRepository, name: String): Boolean {
-    val serialized = prefs.raw.getString(PROFILE_KEY_HEADER + name, null) ?: return false
-    val profile = deserializeProfile(serialized) ?: return false
+    val fields = readProfileFields(prefs, name) ?: return false
 
-    importProfile(profile, prefs.raw)
+    writeFields(prefs, fields)
     setActiveProfile(prefs, name)
     touchProfile(prefs, name)
 
     return true
 }
 
-/**
- * Правит поля подключения поверх снимка настроек. Для нового профиля снимок берётся
- * с текущих настроек, для существующего — из него самого, чтобы правка хоста не
- * сбрасывала остальное: MTU, маршруты, исключения приложений.
- */
 internal fun saveProfile(
     prefs: PrefsRepository,
     previousName: String?,
@@ -148,16 +150,7 @@ internal fun saveProfile(
     password: String,
     iconIndex: Int,
 ) {
-    val base = previousName
-        ?.let { prefs.raw.getString(PROFILE_KEY_HEADER + it, null) }
-        ?.let { deserializeProfile(it) }
-        ?: buildProfile(prefs.raw)
-
-    base.stringSetting[OscPrefKey.HOME_HOSTNAME.name] = hostname
-    base.stringSetting[OscPrefKey.HOME_USERNAME.name] = username
-    base.stringSetting[OscPrefKey.HOME_PASSWORD.name] = password
-    base.intSetting[OscPrefKey.SSL_PORT.name] = port
-    base.stringSetting[OscPrefKey.SSL_SSTP_PATH.name] = sstpPath
+    val fields = ProfileFields(hostname, port, sstpPath, username, password)
 
     prefs.raw.edit {
         if (previousName != null && previousName != name) {
@@ -166,17 +159,56 @@ internal fun saveProfile(
             remove(PROFILE_USED_HEADER + previousName)
         }
 
-        putString(PROFILE_KEY_HEADER + name, encodeProfile(base))
+        putString(PROFILE_KEY_HEADER + name, encodeProfile(toProfile(fields)))
         putInt(PROFILE_ICON_HEADER + name, iconIndex)
     }
 
     val wasActive = prefs.getString(OscPrefKey.HOME_ACTIVE_PROFILE) == previousName
 
-    // Новый профиль и правка активного сразу становятся текущими настройками:
-    // иначе на главной остались бы старые host и логин.
+    // Новый профиль и правка активного сразу становятся текущим подключением:
+    // иначе на главной остались бы старые сервер и логин.
     if (previousName == null || wasActive) {
         applyProfile(prefs, name)
     }
+}
+
+/**
+ * Правка полей подключения на экране «Подключение» оседает в активном профиле,
+ * иначе она потерялась бы при первом же переключении — именно так камуфляжный путь
+ * однажды достался не тому роутеру.
+ */
+internal fun syncActiveProfile(prefs: PrefsRepository) {
+    val name = prefs.getString(OscPrefKey.HOME_ACTIVE_PROFILE)
+
+    if (name.isEmpty() || prefs.raw.getString(PROFILE_KEY_HEADER + name, null) == null) return
+
+    val fields = ProfileFields(
+        hostname = prefs.getString(OscPrefKey.HOME_HOSTNAME),
+        port = prefs.getInt(OscPrefKey.SSL_PORT),
+        sstpPath = prefs.getString(OscPrefKey.SSL_SSTP_PATH),
+        username = prefs.getString(OscPrefKey.HOME_USERNAME),
+        password = prefs.getString(OscPrefKey.HOME_PASSWORD),
+    )
+
+    prefs.raw.edit { putString(PROFILE_KEY_HEADER + name, encodeProfile(toProfile(fields))) }
+}
+
+private fun toProfile(fields: ProfileFields): Profile {
+    return Profile().also {
+        it.stringSetting[OscPrefKey.HOME_HOSTNAME.name] = fields.hostname
+        it.stringSetting[OscPrefKey.SSL_SSTP_PATH.name] = fields.sstpPath
+        it.stringSetting[OscPrefKey.HOME_USERNAME.name] = fields.username
+        it.stringSetting[OscPrefKey.HOME_PASSWORD.name] = fields.password
+        it.intSetting[OscPrefKey.SSL_PORT.name] = fields.port
+    }
+}
+
+private fun writeFields(prefs: PrefsRepository, fields: ProfileFields) {
+    prefs.setString(OscPrefKey.HOME_HOSTNAME, fields.hostname)
+    prefs.setInt(OscPrefKey.SSL_PORT, fields.port)
+    prefs.setString(OscPrefKey.SSL_SSTP_PATH, fields.sstpPath)
+    prefs.setString(OscPrefKey.HOME_USERNAME, fields.username)
+    prefs.setString(OscPrefKey.HOME_PASSWORD, fields.password)
 }
 
 internal fun setActiveProfile(prefs: PrefsRepository, name: String) {

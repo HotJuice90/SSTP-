@@ -32,10 +32,13 @@ import home.keenetic.sstp.R
 import kittoku.osc.preference.OscPrefKey
 
 
+private const val DEFAULT_PORT = 443
+
 /**
  * Профиль в апстриме — это снимок всех настроек под своим ключом, поэтому редактор
- * правит пять полей подключения поверх снимка, не трогая остальные настройки
- * профиля. Новый профиль берёт за основу текущие настройки приложения.
+ * правит поля подключения поверх снимка, не трогая остальные настройки профиля.
+ * Поля нового профиля пустые: подставлять данные активного профиля значит путать
+ * пользователя чужим сервером и чужим паролем.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -47,26 +50,16 @@ internal fun ProfileEditorScreen(
     val existing = remember(editedProfile) { editedProfile?.let { readProfileFields(prefs, it) } }
 
     var name by remember { mutableStateOf(editedProfile ?: "") }
-    var host by remember {
-        mutableStateOf(existing?.hostname ?: prefs.getString(OscPrefKey.HOME_HOSTNAME))
-    }
-    var port by remember {
-        mutableStateOf((existing?.port ?: prefs.getInt(OscPrefKey.SSL_PORT)).toString())
-    }
-    var sstpPath by remember {
-        mutableStateOf(existing?.sstpPath ?: prefs.getString(OscPrefKey.SSL_SSTP_PATH))
-    }
-    var username by remember {
-        mutableStateOf(existing?.username ?: prefs.getString(OscPrefKey.HOME_USERNAME))
-    }
-    var password by remember {
-        mutableStateOf(existing?.password ?: prefs.getString(OscPrefKey.HOME_PASSWORD))
-    }
+    var host by remember { mutableStateOf(existing?.hostname.orEmpty()) }
+    var port by remember { mutableStateOf((existing?.port ?: DEFAULT_PORT).toString()) }
+    var sstpPath by remember { mutableStateOf(existing?.sstpPath.orEmpty()) }
+    var username by remember { mutableStateOf(existing?.username.orEmpty()) }
+    var password by remember { mutableStateOf(existing?.password.orEmpty()) }
     var iconIndex by remember {
         mutableStateOf(editedProfile?.let { readProfileIcon(prefs, it) } ?: 0)
     }
 
-    val isValid = name.isNotBlank() || host.isNotBlank()
+    val isValid = host.isNotBlank()
 
     Column(
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -169,7 +162,13 @@ internal fun ProfileEditorScreen(
         }
 
         Text(
-            text = stringResource(R.string.profile_editor_note),
+            text = stringResource(
+                if (editedProfile == null) {
+                    R.string.profile_editor_note_new
+                } else {
+                    R.string.profile_editor_note
+                }
+            ),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -182,7 +181,7 @@ internal fun ProfileEditorScreen(
                     previousName = editedProfile,
                     name = name.trim().ifEmpty { host.trim() },
                     hostname = host.trim(),
-                    port = port.toIntOrNull() ?: 443,
+                    port = port.toIntOrNull() ?: DEFAULT_PORT,
                     sstpPath = sstpPath.trim(),
                     username = username.trim(),
                     password = password,

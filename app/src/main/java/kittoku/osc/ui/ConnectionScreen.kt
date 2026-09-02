@@ -22,13 +22,19 @@ internal fun ConnectionScreen(prefs: PrefsRepository) {
             title = stringResource(R.string.pref_hostname),
             value = hostname,
             placeholder = stringResource(R.string.pref_hostname_hint),
-            onValueChange = { prefs.setString(OscPrefKey.HOME_HOSTNAME, it.trim()) },
+            onValueChange = {
+                prefs.setString(OscPrefKey.HOME_HOSTNAME, it.trim())
+                syncActiveProfile(prefs)
+            },
         )
 
         IntSettingRow(
             title = stringResource(R.string.pref_port),
             value = port,
-            onValueChange = { prefs.setInt(OscPrefKey.SSL_PORT, it) },
+            onValueChange = {
+                prefs.setInt(OscPrefKey.SSL_PORT, it)
+                syncActiveProfile(prefs)
+            },
         )
 
         TextSettingRow(
@@ -37,13 +43,19 @@ internal fun ConnectionScreen(prefs: PrefsRepository) {
             placeholder = stringResource(R.string.pref_sstp_path_hint),
             note = stringResource(R.string.pref_sstp_path_note),
             keyboardType = KeyboardType.Uri,
-            onValueChange = { prefs.setString(OscPrefKey.SSL_SSTP_PATH, it.trim()) },
+            onValueChange = {
+                prefs.setString(OscPrefKey.SSL_SSTP_PATH, it.trim())
+                syncActiveProfile(prefs)
+            },
         )
 
         TextSettingRow(
             title = stringResource(R.string.pref_username),
             value = username,
-            onValueChange = { prefs.setString(OscPrefKey.HOME_USERNAME, it.trim()) },
+            onValueChange = {
+                prefs.setString(OscPrefKey.HOME_USERNAME, it.trim())
+                syncActiveProfile(prefs)
+            },
         )
 
         TextSettingRow(
@@ -51,7 +63,10 @@ internal fun ConnectionScreen(prefs: PrefsRepository) {
             value = password,
             isPassword = true,
             keyboardType = KeyboardType.Password,
-            onValueChange = { prefs.setString(OscPrefKey.HOME_PASSWORD, it) },
+            onValueChange = {
+                prefs.setString(OscPrefKey.HOME_PASSWORD, it)
+                syncActiveProfile(prefs)
+            },
         )
     }
 }

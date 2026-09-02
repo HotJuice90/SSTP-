@@ -129,8 +129,8 @@
     <string name="profile_save_message">If left blank, the server name is used. An existing profile with the same name is overwritten.</string>
     <string name="profile_activate">Set as active</string>
     <string name="profile_delete">Delete</string>
-    <string name="profile_import">Import from file</string>
-    <string name="profile_export">Export to file</string>
+    <string name="profile_import">Import all settings</string>
+    <string name="profile_export">Export all settings</string>
     <string name="profile_export_warning">The password is exported as plain text. Clear it before exporting if that is not what you want.</string>
     <string name="profile_reload_defaults">Reset all settings</string>
     <string name="profile_reload_message">Reset all settings to defaults?</string>
@@ -211,4 +211,5 @@
     <string name="pref_sstp_path">SSTP path (camouflage)</string>
     <string name="pref_sstp_path_hint">/?9231a25e</string>
     <string name="pref_sstp_path_note">Leave empty if camouflage is off on the router. If it is on, paste the address the router shows — the whole URL will do.</string>
+    <string name="profile_editor_note_new">Advanced settings — MTU, routes, TLS — are taken from the current ones and can be changed later in Settings.</string>
 </resources>

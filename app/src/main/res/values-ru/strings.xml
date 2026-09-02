@@ -128,8 +128,8 @@
     <string name="profile_save_message">Если оставить пустым, будет использовано имя сервера. Профиль с таким же названием будет перезаписан.</string>
     <string name="profile_activate">Сделать активным</string>
     <string name="profile_delete">Удалить</string>
-    <string name="profile_import">Импорт из файла</string>
-    <string name="profile_export">Экспорт в файл</string>
+    <string name="profile_import">Импорт всех настроек</string>
+    <string name="profile_export">Экспорт всех настроек</string>
     <string name="profile_export_warning">Пароль выгружается открытым текстом. Если это нежелательно, очисти его перед экспортом.</string>
     <string name="profile_reload_defaults">Сбросить все настройки</string>
     <string name="profile_reload_message">Сбросить все настройки к значениям по умолчанию?</string>
@@ -210,4 +210,5 @@
     <string name="pref_sstp_path">Путь SSTP (камуфляж)</string>
     <string name="pref_sstp_path_hint">/?9231a25e</string>
     <string name="pref_sstp_path_note">Оставь пустым, если камуфляж на роутере выключен. Если включён — вставь адрес, который показывает роутер, можно целиком со схемой и хостом.</string>
+    <string name="profile_editor_note_new">Остальные настройки — MTU, маршруты, TLS — возьмутся из текущих, поменять их можно потом в настройках.</string>
 </resources>
