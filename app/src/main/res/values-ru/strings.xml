@@ -202,4 +202,9 @@
     <string name="home_network_title">Ты уже дома</string>
     <string name="home_network_message">Эта Wi-Fi — сеть того самого роутера, к которому идёт подключение. Изнутри туннель обычно не встаёт: имя резолвится во внешний адрес, и пакету некуда возвращаться. Дома всё и так доступно без VPN.</string>
     <string name="home_network_connect_anyway">Всё равно подключиться</string>
+    <string name="error_unknown_host">Не удалось определить адрес сервера</string>
+    <string name="error_server_timeout">Сервер не ответил вовремя</string>
+    <string name="error_server_unreachable">Сервер недоступен</string>
+    <string name="error_tls">Не удалось установить защищённое соединение</string>
+    <string name="error_network">Сетевая ошибка, соединение прервано</string>
 </resources>

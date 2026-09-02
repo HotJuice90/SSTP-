@@ -203,4 +203,9 @@
     <string name="home_network_title">You are already home</string>
     <string name="home_network_message">This Wi-Fi is the network of the router you are connecting to. From the inside the tunnel usually fails: the name resolves to the external address and the packet has nowhere to return. Everything at home is already reachable without the VPN.</string>
     <string name="home_network_connect_anyway">Connect anyway</string>
+    <string name="error_unknown_host">Could not resolve the server address</string>
+    <string name="error_server_timeout">The server did not answer in time</string>
+    <string name="error_server_unreachable">The server is unreachable</string>
+    <string name="error_tls">Could not establish a secure connection</string>
+    <string name="error_network">Network error, connection interrupted</string>
 </resources>

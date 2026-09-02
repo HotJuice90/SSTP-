@@ -35,6 +35,11 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withTimeoutOrNull
+import java.io.IOException
+import java.net.ConnectException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
+import javax.net.ssl.SSLException
 
 
 internal class Controller(internal val bridge: SharedBridge) {
@@ -75,9 +80,37 @@ internal class Controller(internal val bridge: SharedBridge) {
             kill(isReconnectionEnabled) {
                 val header = "OSC: ERR_UNEXPECTED"
                 bridge.service.logWriter?.report(header + "\n" + throwable.stackTraceToString())
-                bridge.service.notifyError(header)
+                bridge.service.notifyError(describeFailure(throwable))
             }
         }
+    }
+
+    /**
+     * Непойманное исключение — это чаще всего обычная сетевая беда, а не поломка
+     * протокола, поэтому в уведомлении показываем причину словами. Само исключение
+     * со стектрейсом всё равно уходит в журнал.
+     */
+    private fun describeFailure(throwable: Throwable): String {
+        var current: Throwable? = throwable
+
+        while (current != null) {
+            val messageId = when (current) {
+                is UnknownHostException -> R.string.error_unknown_host
+                is SocketTimeoutException -> R.string.error_server_timeout
+                is ConnectException -> R.string.error_server_unreachable
+                is SSLException -> R.string.error_tls
+                is IOException -> R.string.error_network
+                else -> null
+            }
+
+            if (messageId != null) {
+                return bridge.service.getString(messageId)
+            }
+
+            current = current.cause
+        }
+
+        return "OSC: ERR_UNEXPECTED"
     }
 
     internal fun launchJobMain() {
