@@ -1,5 +1,10 @@
 package kittoku.osc.ui
 
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -147,6 +152,17 @@ private fun Hero(
             )
         }
 
+        val pulse = rememberInfiniteTransition(label = "pulse")
+        val dotAlpha by pulse.animateFloat(
+            initialValue = 0.25f,
+            targetValue = 1f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(durationMillis = 700),
+                repeatMode = RepeatMode.Reverse,
+            ),
+            label = "dotAlpha",
+        )
+
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -158,7 +174,7 @@ private fun Hero(
                     .background(
                         color = when {
                             isConnected -> MaterialTheme.colorScheme.primary
-                            isBusy -> MaterialTheme.colorScheme.tertiary
+                            isBusy -> MaterialTheme.colorScheme.primary.copy(alpha = dotAlpha)
                             else -> MaterialTheme.colorScheme.outline
                         },
                         shape = CircleShape,
