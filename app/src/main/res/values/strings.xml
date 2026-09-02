@@ -209,4 +209,11 @@
     <string name="pref_sstp_path_hint">/?9231a25e</string>
     <string name="pref_sstp_path_note">Leave empty if camouflage is off on the router. If it is on, paste the address the router shows — the whole URL will do.</string>
     <string name="profile_editor_note_new">Advanced settings — MTU, routes, TLS — are taken from the current ones and can be changed later in Settings.</string>
+    <string name="group_appearance">Appearance</string>
+    <string name="pref_theme">Theme</string>
+    <string name="theme_system">System</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="pref_language">Language</string>
+    <string name="language_system">System</string>
 </resources>

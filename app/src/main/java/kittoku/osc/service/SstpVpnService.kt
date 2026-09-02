@@ -6,6 +6,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
@@ -31,6 +32,7 @@ import kittoku.osc.control.Controller
 import kittoku.osc.control.LogWriter
 import kittoku.osc.control.UnderlyingNetworkObserver
 import kittoku.osc.preference.OscPrefKey
+import kittoku.osc.preference.applyStoredLocale
 import kittoku.osc.preference.STATE_CONNECTED
 import kittoku.osc.preference.STATE_CONNECTING
 import kittoku.osc.preference.STATE_DISCONNECTED
@@ -72,6 +74,10 @@ internal const val NOTIFICATION_CERTIFICATE_ID = 4
 
 
 internal class SstpVpnService : VpnService() {
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(applyStoredLocale(newBase))
+    }
+
     private lateinit var prefs: SharedPreferences
     private lateinit var listener: SharedPreferences.OnSharedPreferenceChangeListener
     private lateinit var notificationManager: NotificationManagerCompat

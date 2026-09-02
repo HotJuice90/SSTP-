@@ -1,10 +1,12 @@
 package kittoku.osc.activity
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
+import kittoku.osc.preference.applyStoredLocale
 import java.io.BufferedOutputStream
 
 
@@ -20,6 +22,10 @@ internal const val EXTRA_KEY_FILENAME = "FILENAME"
  * открывается системный диалог создания файла.
  */
 class BlankActivity : ComponentActivity() {
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(applyStoredLocale(newBase))
+    }
+
     private val launcher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->

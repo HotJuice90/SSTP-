@@ -7,6 +7,8 @@ import kittoku.osc.DEFAULT_MTU
 
 internal enum class OscPrefKey {
     ROOT_STATE,
+    APP_THEME,
+    APP_LANGUAGE,
     HOME_HOSTNAME,
     HOME_USERNAME,
     HOME_PASSWORD,
@@ -97,6 +99,8 @@ internal const val LIST_TYPE_ALLOWED = "Allowed Apps"
 internal const val LIST_TYPE_DISALLOWED = "Disallowed Apps"
 
 internal val DEFAULT_STRING_MAP = mapOf(
+    OscPrefKey.APP_THEME to THEME_SYSTEM,
+    OscPrefKey.APP_LANGUAGE to LANGUAGE_SYSTEM,
     OscPrefKey.HOME_HOSTNAME to EMPTY_TEXT,
     OscPrefKey.HOME_USERNAME to EMPTY_TEXT,
     OscPrefKey.HOME_PASSWORD to EMPTY_TEXT,

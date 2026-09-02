@@ -3,6 +3,7 @@ package kittoku.osc.ui
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import android.app.Activity
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -19,10 +20,17 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import home.keenetic.sstp.BuildConfig
 import home.keenetic.sstp.R
+import kittoku.osc.preference.APP_LANGUAGES
+import kittoku.osc.preference.APP_THEMES
 import kittoku.osc.preference.AUTH_PROTOCOL_LIST
+import kittoku.osc.preference.LANGUAGE_EN
+import kittoku.osc.preference.LANGUAGE_RU
 import kittoku.osc.preference.LIST_TYPE_ALLOWED
 import kittoku.osc.preference.LIST_TYPE_DISALLOWED
 import kittoku.osc.preference.OscPrefKey
+import kittoku.osc.preference.THEME_DARK
+import kittoku.osc.preference.THEME_LIGHT
+import kittoku.osc.preference.syncSystemLocale
 import javax.net.ssl.SSLContext
 
 
@@ -42,6 +50,51 @@ internal fun SettingsScreen(
     val context = LocalContext.current
 
     Column {
+        // --- оформление ---
+        SectionTitle(stringResource(R.string.group_appearance))
+
+        val themeMode by prefs.stringState(OscPrefKey.APP_THEME)
+        val language by prefs.stringState(OscPrefKey.APP_LANGUAGE)
+
+        DropdownSettingRow(
+            title = stringResource(R.string.pref_theme),
+            value = themeMode,
+            options = APP_THEMES,
+            labelOf = { value ->
+                stringResource(
+                    when (value) {
+                        THEME_LIGHT -> R.string.theme_light
+                        THEME_DARK -> R.string.theme_dark
+                        else -> R.string.theme_system
+                    }
+                )
+            },
+            onValueChange = { prefs.setString(OscPrefKey.APP_THEME, it) },
+        )
+
+        DropdownSettingRow(
+            title = stringResource(R.string.pref_language),
+            value = language,
+            options = APP_LANGUAGES,
+            // Русский и English — имена собственные, их не переводят вслед за
+            // языком интерфейса; переведена только подпись «системный».
+            labelOf = { value ->
+                when (value) {
+                    LANGUAGE_RU -> "Русский"
+                    LANGUAGE_EN -> "English"
+                    else -> stringResource(R.string.language_system)
+                }
+            },
+            onValueChange = {
+                prefs.setString(OscPrefKey.APP_LANGUAGE, it)
+                syncSystemLocale(context, it)
+                // Compose перечитывает строки только после пересоздания активности.
+                (context as? Activity)?.recreate()
+            },
+        )
+
+        GroupDivider()
+
         // --- PPP ---
         SectionTitle(stringResource(R.string.group_ppp))
 

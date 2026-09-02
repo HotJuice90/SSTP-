@@ -208,4 +208,11 @@
     <string name="pref_sstp_path_hint">/?9231a25e</string>
     <string name="pref_sstp_path_note">Оставь пустым, если камуфляж на роутере выключен. Если включён — вставь адрес, который показывает роутер, можно целиком со схемой и хостом.</string>
     <string name="profile_editor_note_new">Остальные настройки — MTU, маршруты, TLS — возьмутся из текущих, поменять их можно потом в настройках.</string>
+    <string name="group_appearance">Оформление</string>
+    <string name="pref_theme">Тема</string>
+    <string name="theme_system">Системная</string>
+    <string name="theme_light">Светлая</string>
+    <string name="theme_dark">Тёмная</string>
+    <string name="pref_language">Язык</string>
+    <string name="language_system">Системный</string>
 </resources>

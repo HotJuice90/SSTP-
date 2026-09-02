@@ -31,6 +31,8 @@ private val EXCLUDED_STRING_PREFERENCES = arrayOf(
     OscPrefKey.HOME_CONNECTED_AT,
     OscPrefKey.HOME_ACTIVE_PROFILE,
     OscPrefKey.ROUTE_APP_LIST_TYPE,
+    OscPrefKey.APP_THEME,
+    OscPrefKey.APP_LANGUAGE,
 )
 
 private val EXCLUDED_SET_PREFERENCES = arrayOf(

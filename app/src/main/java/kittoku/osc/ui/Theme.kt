@@ -6,6 +6,8 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import kittoku.osc.preference.THEME_DARK
+import kittoku.osc.preference.THEME_LIGHT
 
 
 // Палитра фиксированная, без Material You: приложение должно выглядеть одинаково
@@ -71,9 +73,15 @@ private val DarkScheme = darkColorScheme(
 
 @Composable
 internal fun SstpTheme(
-    isDark: Boolean = isSystemInDarkTheme(),
+    themeMode: String,
     content: @Composable () -> Unit,
 ) {
+    val isDark = when (themeMode) {
+        THEME_LIGHT -> false
+        THEME_DARK -> true
+        else -> isSystemInDarkTheme() // THEME_SYSTEM и любое незнакомое значение
+    }
+
     MaterialTheme(
         colorScheme = if (isDark) DarkScheme else LightScheme,
         content = content,
