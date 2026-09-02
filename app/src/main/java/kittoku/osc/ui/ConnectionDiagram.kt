@@ -2,6 +2,7 @@ package kittoku.osc.ui
 
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
@@ -53,10 +54,11 @@ internal fun ConnectionDiagram(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = if (isBusy) 900 else 1600),
-            // Пока идёт подключение — бежим в одну сторону, как «пытаемся достучаться».
-            // Когда туннель поднят — ходим туда-сюда: связь двусторонняя.
-            repeatMode = if (isBusy) RepeatMode.Restart else RepeatMode.Reverse,
+            animation = tween(
+                durationMillis = if (isBusy) 900 else 1600,
+                easing = LinearEasing,
+            ),
+            repeatMode = RepeatMode.Restart,
         ),
         label = "phase",
     )
@@ -110,24 +112,33 @@ internal fun ConnectionDiagram(
                                 cap = StrokeCap.Round,
                             )
                         } else {
-                            // Туннель поднят: пятно без головы ходит туда-обратно и
-                            // одинаково выглядит в обе стороны.
-                            val center = size.width * phase
-                            val half = size.width * 0.22f
-                            val from = (center - half).coerceAtLeast(0f)
-                            val to = (center + half).coerceAtMost(size.width)
+                            // Туннель поднят: два встречных пятна в одном цикле —
+                            // связь двусторонняя, но движение остаётся равномерным.
+                            val half = size.width * 0.2f
 
-                            drawLine(
-                                brush = Brush.horizontalGradient(
-                                    colors = listOf(Color.Transparent, activeColor, Color.Transparent),
-                                    startX = from,
-                                    endX = to,
-                                ),
-                                start = Offset(from, y),
-                                end = Offset(to, y),
-                                strokeWidth = 10f,
-                                cap = StrokeCap.Round,
-                            )
+                            listOf(phase, 1f - phase).forEach { position ->
+                                val center = size.width * position
+                                val from = (center - half).coerceAtLeast(0f)
+                                val to = (center + half).coerceAtMost(size.width)
+
+                                if (to > from) {
+                                    drawLine(
+                                        brush = Brush.horizontalGradient(
+                                            colors = listOf(
+                                                Color.Transparent,
+                                                activeColor,
+                                                Color.Transparent,
+                                            ),
+                                            startX = from,
+                                            endX = to,
+                                        ),
+                                        start = Offset(from, y),
+                                        end = Offset(to, y),
+                                        strokeWidth = 10f,
+                                        cap = StrokeCap.Round,
+                                    )
+                                }
+                            }
                         }
                     } else {
                         drawLine(
