@@ -60,6 +60,25 @@ private const val HTTP_DELIMITER = "\r\n"
 private const val HTTP_SUFFIX = "\r\n\r\n"
 
 internal const val SSL_REQUEST_INTERVAL = 10_000L
+
+// Путь, заданный спецификацией MS-SSTP. Он одинаков у всех серверов в мире, поэтому
+// по нему VPN и опознают снаружи; камуфляж Keenetic подменяет его своим адресом.
+private const val SSTP_DEFAULT_PATH = "/sra_{BA195980-CD49-458b-9E23-C84EE0ADCD75}/"
+
+/** Принимает и целый адрес из роутера, и один путь: и то и другое приводим к пути. */
+private fun normalizeSstpPath(raw: String): String {
+    val trimmed = raw.trim()
+
+    if (trimmed.isEmpty()) return SSTP_DEFAULT_PATH
+
+    val tail = if (trimmed.contains("://")) {
+        trimmed.substringAfter("://").substringAfter('/', "")
+    } else {
+        trimmed.trimStart('/')
+    }
+
+    return "/$tail"
+}
 private const val SOCKET_CONNECT_TIMEOUT = 10_000
 
 internal class SSLTerminal(private val bridge: SharedBridge) {
@@ -79,6 +98,7 @@ internal class SSLTerminal(private val bridge: SharedBridge) {
     private val sslHostname = getStringPrefValue(OscPrefKey.HOME_HOSTNAME, bridge.prefs)
     private val sslPort = getIntPrefValue(OscPrefKey.SSL_PORT, bridge.prefs)
     private val selectedVersion = getStringPrefValue(OscPrefKey.SSL_VERSION, bridge.prefs)
+    private val sstpPath = normalizeSstpPath(getStringPrefValue(OscPrefKey.SSL_SSTP_PATH, bridge.prefs))
     private val enabledSuites = getSetPrefValue(OscPrefKey.SSL_SUITES, bridge.prefs)
 
     internal fun initialize() {
@@ -318,7 +338,7 @@ internal class SSLTerminal(private val bridge: SharedBridge) {
         val buffer = ByteBuffer.allocate(getApplicationBufferSize())
 
         val request = arrayOf(
-            "SSTP_DUPLEX_POST /sra_{BA195980-CD49-458b-9E23-C84EE0ADCD75}/ HTTP/1.1",
+            "SSTP_DUPLEX_POST $sstpPath HTTP/1.1",
             "Content-Length: 18446744073709551615",
             "Host: $sslHostname",
             "SSTPCORRELATIONID: {${bridge.guid}}"

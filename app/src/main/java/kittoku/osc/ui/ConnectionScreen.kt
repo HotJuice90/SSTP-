@@ -13,6 +13,7 @@ import kittoku.osc.preference.OscPrefKey
 internal fun ConnectionScreen(prefs: PrefsRepository) {
     val hostname by prefs.stringState(OscPrefKey.HOME_HOSTNAME)
     val port by prefs.intState(OscPrefKey.SSL_PORT)
+    val sstpPath by prefs.stringState(OscPrefKey.SSL_SSTP_PATH)
     val username by prefs.stringState(OscPrefKey.HOME_USERNAME)
     val password by prefs.stringState(OscPrefKey.HOME_PASSWORD)
 
@@ -28,6 +29,15 @@ internal fun ConnectionScreen(prefs: PrefsRepository) {
             title = stringResource(R.string.pref_port),
             value = port,
             onValueChange = { prefs.setInt(OscPrefKey.SSL_PORT, it) },
+        )
+
+        TextSettingRow(
+            title = stringResource(R.string.pref_sstp_path),
+            value = sstpPath,
+            placeholder = stringResource(R.string.pref_sstp_path_hint),
+            note = stringResource(R.string.pref_sstp_path_note),
+            keyboardType = KeyboardType.Uri,
+            onValueChange = { prefs.setString(OscPrefKey.SSL_SSTP_PATH, it.trim()) },
         )
 
         TextSettingRow(

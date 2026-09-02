@@ -53,6 +53,9 @@ internal fun ProfileEditorScreen(
     var port by remember {
         mutableStateOf((existing?.port ?: prefs.getInt(OscPrefKey.SSL_PORT)).toString())
     }
+    var sstpPath by remember {
+        mutableStateOf(existing?.sstpPath ?: prefs.getString(OscPrefKey.SSL_SSTP_PATH))
+    }
     var username by remember {
         mutableStateOf(existing?.username ?: prefs.getString(OscPrefKey.HOME_USERNAME))
     }
@@ -94,6 +97,16 @@ internal fun ProfileEditorScreen(
             singleLine = true,
             label = { Text(stringResource(R.string.pref_port)) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        OutlinedTextField(
+            value = sstpPath,
+            onValueChange = { sstpPath = it },
+            singleLine = true,
+            label = { Text(stringResource(R.string.pref_sstp_path)) },
+            placeholder = { Text(stringResource(R.string.pref_sstp_path_hint)) },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
             modifier = Modifier.fillMaxWidth(),
         )
 
@@ -170,6 +183,7 @@ internal fun ProfileEditorScreen(
                     name = name.trim().ifEmpty { host.trim() },
                     hostname = host.trim(),
                     port = port.toIntOrNull() ?: 443,
+                    sstpPath = sstpPath.trim(),
                     username = username.trim(),
                     password = password,
                     iconIndex = iconIndex,

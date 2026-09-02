@@ -208,4 +208,7 @@
     <string name="error_server_unreachable">The server is unreachable</string>
     <string name="error_tls">Could not establish a secure connection</string>
     <string name="error_network">Network error, connection interrupted</string>
+    <string name="pref_sstp_path">SSTP path (camouflage)</string>
+    <string name="pref_sstp_path_hint">/?9231a25e</string>
+    <string name="pref_sstp_path_note">Leave empty if camouflage is off on the router. If it is on, paste the address the router shows — the whole URL will do.</string>
 </resources>

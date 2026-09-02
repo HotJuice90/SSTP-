@@ -63,6 +63,7 @@ internal class ProfileSummary(
 internal class ProfileFields(
     val hostname: String,
     val port: Int,
+    val sstpPath: String,
     val username: String,
     val password: String,
 )
@@ -113,6 +114,7 @@ internal fun readProfileFields(prefs: PrefsRepository, name: String): ProfileFie
     return ProfileFields(
         hostname = profile.stringSetting[OscPrefKey.HOME_HOSTNAME.name].orEmpty(),
         port = profile.intSetting[OscPrefKey.SSL_PORT.name] ?: 443,
+        sstpPath = profile.stringSetting[OscPrefKey.SSL_SSTP_PATH.name].orEmpty(),
         username = profile.stringSetting[OscPrefKey.HOME_USERNAME.name].orEmpty(),
         password = profile.stringSetting[OscPrefKey.HOME_PASSWORD.name].orEmpty(),
     )
@@ -141,6 +143,7 @@ internal fun saveProfile(
     name: String,
     hostname: String,
     port: Int,
+    sstpPath: String,
     username: String,
     password: String,
     iconIndex: Int,
@@ -154,6 +157,7 @@ internal fun saveProfile(
     base.stringSetting[OscPrefKey.HOME_USERNAME.name] = username
     base.stringSetting[OscPrefKey.HOME_PASSWORD.name] = password
     base.intSetting[OscPrefKey.SSL_PORT.name] = port
+    base.stringSetting[OscPrefKey.SSL_SSTP_PATH.name] = sstpPath
 
     prefs.raw.edit {
         if (previousName != null && previousName != name) {

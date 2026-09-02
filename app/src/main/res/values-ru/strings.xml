@@ -207,4 +207,7 @@
     <string name="error_server_unreachable">Сервер недоступен</string>
     <string name="error_tls">Не удалось установить защищённое соединение</string>
     <string name="error_network">Сетевая ошибка, соединение прервано</string>
+    <string name="pref_sstp_path">Путь SSTP (камуфляж)</string>
+    <string name="pref_sstp_path_hint">/?9231a25e</string>
+    <string name="pref_sstp_path_note">Оставь пустым, если камуфляж на роутере выключен. Если включён — вставь адрес, который показывает роутер, можно целиком со схемой и хостом.</string>
 </resources>
