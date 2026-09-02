@@ -29,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,6 +46,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import home.keenetic.sstp.R
 import kittoku.osc.preference.OscPrefKey
+import kittoku.osc.preference.STATE_CONNECTED
 import kittoku.osc.preference.checkPreferences
 import kittoku.osc.service.ACTION_VPN_CONNECT
 import kittoku.osc.service.ACTION_VPN_DISCONNECT
@@ -83,6 +85,18 @@ internal fun AppRoot(prefs: PrefsRepository) {
     val status = remember(rawStatus) { parseConnectionStatus(rawStatus) }
     val connectedAt = connectedAtRaw.toLongOrNull()
 
+    var isHomeNetworkWarningShown by remember { mutableStateOf(false) }
+
+    // Пока туннель жив, роутер сам сообщает свой адрес в качестве DNS — по нему
+    // потом и узнаём домашнюю сеть.
+    LaunchedEffect(state, rawStatus) {
+        if (state == STATE_CONNECTED) {
+            status.dnsServers.firstOrNull()?.also {
+                rememberHomeGateway(prefs, prefs.getString(OscPrefKey.HOME_ACTIVE_PROFILE), it)
+            }
+        }
+    }
+
     fun open(target: Screen) {
         if (target.isTab) {
             parentTab = target
@@ -110,7 +124,14 @@ internal fun AppRoot(prefs: PrefsRepository) {
         }
     }
 
-    fun connect() {
+    fun connect(isForced: Boolean = false) {
+        if (!isForced &&
+            isOnHomeNetwork(context, prefs, prefs.getString(OscPrefKey.HOME_ACTIVE_PROFILE))
+        ) {
+            isHomeNetworkWarningShown = true
+            return
+        }
+
         checkPreferences(prefs.raw)?.also { invalid ->
             val reason = context.getString(invalid.messageId, *invalid.args.toTypedArray())
 
@@ -130,6 +151,19 @@ internal fun AppRoot(prefs: PrefsRepository) {
 
     BackHandler(enabled = screen != Screen.HOME) {
         screen = if (screen.isTab) Screen.HOME else parentTab
+    }
+
+    if (isHomeNetworkWarningShown) {
+        ConfirmDialog(
+            title = stringResource(R.string.home_network_title),
+            message = stringResource(R.string.home_network_message),
+            confirmLabel = stringResource(R.string.home_network_connect_anyway),
+            onDismiss = { isHomeNetworkWarningShown = false },
+            onConfirm = {
+                isHomeNetworkWarningShown = false
+                connect(isForced = true)
+            },
+        )
     }
 
     Scaffold(
