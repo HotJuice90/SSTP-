@@ -21,6 +21,7 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.preference.PreferenceManager
 import home.keenetic.sstp.R
 import kittoku.osc.SharedBridge
+import kittoku.osc.activity.MainActivity
 import kittoku.osc.control.Controller
 import kittoku.osc.control.LogWriter
 import kittoku.osc.control.UnderlyingNetworkObserver
@@ -30,6 +31,7 @@ import kittoku.osc.preference.STATE_CONNECTING
 import kittoku.osc.preference.STATE_DISCONNECTED
 import kittoku.osc.preference.STATE_RECONNECTING
 import kittoku.osc.preference.accessor.getBooleanPrefValue
+import kittoku.osc.preference.accessor.getStringPrefValue
 import kittoku.osc.preference.accessor.getURIPrefValue
 import kittoku.osc.preference.accessor.setBooleanPrefValue
 import kittoku.osc.preference.accessor.setStringPrefValue
@@ -98,6 +100,8 @@ internal class SstpVpnService : VpnService() {
     // шторке. Экрану нужна градация, поэтому состояние публикуется отдельно.
     private fun setUiState(state: String) {
         setStringPrefValue(state, OscPrefKey.HOME_STATE, prefs)
+
+        updateOngoingNotification(state)
     }
 
     private fun requestTileListening() {
@@ -329,41 +333,104 @@ internal class SstpVpnService : VpnService() {
     }
 
     private fun beForegrounded() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            arrayOf(
-                NOTIFICATION_ERROR_CHANNEL,
-                NOTIFICATION_RECONNECT_CHANNEL,
+        listOf(
+            Triple(
                 NOTIFICATION_DISCONNECT_CHANNEL,
+                R.string.notification_channel_status,
+                NotificationManager.IMPORTANCE_LOW, // постоянное уведомление не должно звенеть
+            ),
+            Triple(
+                NOTIFICATION_RECONNECT_CHANNEL,
+                R.string.notification_channel_reconnect,
+                NotificationManager.IMPORTANCE_LOW,
+            ),
+            Triple(
+                NOTIFICATION_ERROR_CHANNEL,
+                R.string.notification_channel_error,
+                NotificationManager.IMPORTANCE_DEFAULT,
+            ),
+            Triple(
                 NOTIFICATION_CERTIFICATE_CHANNEL,
-            ).map {
-                NotificationChannel(it, it, NotificationManager.IMPORTANCE_DEFAULT)
-            }.also {
-                notificationManager.createNotificationChannels(it)
-            }
+                R.string.notification_channel_certificate,
+                NotificationManager.IMPORTANCE_DEFAULT,
+            ),
+        ).map { (id, nameId, importance) ->
+            NotificationChannel(id, getString(nameId), importance)
+        }.also {
+            notificationManager.createNotificationChannels(it)
         }
 
-        val pendingIntent = PendingIntent.getService(
+        startForeground(NOTIFICATION_DISCONNECT_ID, buildOngoingNotification(STATE_CONNECTING))
+    }
+
+    /**
+     * Постоянное уведомление: имя профиля, состояние, кнопка отключения и переход
+     * в приложение по тапу. Раньше здесь была пустая карточка с надписью DISCONNECT.
+     */
+    private fun buildOngoingNotification(state: String): Notification {
+        val disconnectIntent = PendingIntent.getService(
             this,
             0,
             Intent(this, SstpVpnService::class.java).setAction(ACTION_VPN_DISCONNECT),
             PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val builder = NotificationCompat.Builder(this, NOTIFICATION_DISCONNECT_CHANNEL).also {
-            it.priority = NotificationCompat.PRIORITY_DEFAULT
-            it.setOngoing(true)
-            it.setAutoCancel(true)
-            it.setSmallIcon(R.drawable.ic_baseline_vpn_lock_24)
-            it.addAction(R.drawable.ic_baseline_close_24, "DISCONNECT", pendingIntent)
-        }
+        val openIntent = PendingIntent.getActivity(
+            this,
+            0,
+            Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
+            PendingIntent.FLAG_IMMUTABLE
+        )
 
-        startForeground(NOTIFICATION_DISCONNECT_ID, builder.build())
+        val title = getStringPrefValue(OscPrefKey.HOME_ACTIVE_PROFILE, prefs)
+            .ifEmpty { getStringPrefValue(OscPrefKey.HOME_HOSTNAME, prefs) }
+            .ifEmpty { getString(R.string.app_name) }
+
+        val stateText = getString(
+            when (state) {
+                STATE_CONNECTED -> R.string.state_connected
+                STATE_RECONNECTING -> R.string.state_reconnecting
+                STATE_DISCONNECTED -> R.string.state_disconnected
+                else -> R.string.state_connecting
+            }
+        )
+
+        return NotificationCompat.Builder(this, NOTIFICATION_DISCONNECT_CHANNEL).also {
+            it.priority = NotificationCompat.PRIORITY_LOW
+            it.setOngoing(true)
+            it.setAutoCancel(false)
+            it.setShowWhen(false)
+            it.setCategory(NotificationCompat.CATEGORY_SERVICE)
+            it.setSmallIcon(R.drawable.ic_baseline_vpn_lock_24)
+            it.setContentTitle(title)
+            it.setContentText(stateText)
+            it.setContentIntent(openIntent)
+            it.addAction(
+                R.drawable.ic_baseline_close_24,
+                getString(R.string.action_disconnect),
+                disconnectIntent,
+            )
+        }.build()
+    }
+
+    private fun updateOngoingNotification(state: String) {
+        if (state == STATE_DISCONNECTED) return // сервис уже уходит, карточку снимет система
+
+        tryNotify(buildOngoingNotification(state), NOTIFICATION_DISCONNECT_ID)
     }
 
     internal fun notifyMessage(message: String, id: Int, channel: String) {
+        val titleId = if (channel == NOTIFICATION_ERROR_CHANNEL) {
+            R.string.notification_error_title
+        } else {
+            R.string.notification_reconnect_title
+        }
+
         NotificationCompat.Builder(this, channel).also {
             it.setSmallIcon(R.drawable.ic_baseline_vpn_lock_24)
+            it.setContentTitle(getString(titleId))
             it.setContentText(message)
+            it.setStyle(NotificationCompat.BigTextStyle().bigText(message))
             it.priority = NotificationCompat.PRIORITY_DEFAULT
             it.setAutoCancel(true)
 

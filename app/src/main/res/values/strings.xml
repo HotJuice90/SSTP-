@@ -188,4 +188,10 @@
     <string name="exclusions_on">%1$d apps bypass the tunnel</string>
     <string name="profile_icon">Icon</string>
     <string name="info_external_ip">External IP</string>
+    <string name="notification_channel_status">VPN status</string>
+    <string name="notification_channel_reconnect">Reconnection</string>
+    <string name="notification_channel_error">Errors</string>
+    <string name="notification_channel_certificate">Server certificate</string>
+    <string name="notification_error_title">Connection error</string>
+    <string name="notification_reconnect_title">Reconnecting</string>
 </resources>

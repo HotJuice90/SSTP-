@@ -187,4 +187,10 @@
     <string name="exclusions_on">Мимо туннеля: %1$d прил.</string>
     <string name="profile_icon">Значок</string>
     <string name="info_external_ip">Внешний IP</string>
+    <string name="notification_channel_status">Состояние VPN</string>
+    <string name="notification_channel_reconnect">Переподключение</string>
+    <string name="notification_channel_error">Ошибки</string>
+    <string name="notification_channel_certificate">Сертификат сервера</string>
+    <string name="notification_error_title">Ошибка подключения</string>
+    <string name="notification_reconnect_title">Переподключение</string>
 </resources>
