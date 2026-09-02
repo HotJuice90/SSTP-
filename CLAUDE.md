@@ -25,7 +25,8 @@ app/src/main/java/kittoku/osc/SharedBridge.kt
 Не выяснять заново:
 
 - `compileSdk` 37 (требование Compose BOM), `targetSdk` 36, AGP 9.3.1, Kotlin 2.2.10, Gradle 9.7, 100% Kotlin
-- UI: Jetpack Compose + Material 3 с dynamic color, всё в `ui/`. Навигация — состоянием в `ui/AppRoot.kt`, без navigation-compose. Старые `fragment/`, `preference/custom/`, `res/xml/*`, `res/layout/`, `res/menu/` удалены
+- UI: Jetpack Compose + Material 3, всё в `ui/`. Палитра фиксированная зелёная в `ui/Theme.kt`, **не** dynamic color; роли `secondaryContainer` и `surfaceContainer*` заданы явно, иначе Material 3 выводит их из основного цвета и подмешивает сиреневый. Навигация — состоянием в `ui/AppRoot.kt` (три вкладки внизу + экраны поверх), без navigation-compose. Старые `fragment/`, `preference/custom/`, `res/xml/*`, `res/layout/`, `res/menu/` удалены
+- Профиль = снимок всех настроек под ключом `PROFILE.<имя>`; значок и метка последнего использования лежат рядом в `PROFILE_ICON.<имя>` и `PROFILE_USED.<имя>`. Исключения приложений намеренно исключены из профилей: они свойство телефона, а не сервера
 - Строки: `res/values/` (английский) + `res/values-ru/`, `localeConfig` для системного выбора языка. Строки-значения (`LIST_TYPE_*`, `"DEFAULT"`, `AUTH_PROTOCOL_*`) переводить нельзя — они пишутся в prefs и в JSON-профили
 - Настройки: `SharedPreferences` через `preference/accessor/*.kt`, ключи в `preference/constant.kt` (enum `OscPrefKey`). Для Compose — `ui/PrefsRepository.kt` со `StateFlow` поверх тех же ключей
 - `SharedPreferences` читается синхронно в конструкторах протокольного слоя. **Не мигрировать на DataStore** — это потянет правки в запретных файлах
