@@ -14,6 +14,9 @@ import android.net.TrafficStats
 import android.net.VpnService
 import android.os.Build
 import android.os.Process
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.os.SystemClock
 import android.service.quicksettings.TileService
 import androidx.core.app.ActivityCompat
@@ -79,6 +82,7 @@ internal class SstpVpnService : VpnService() {
     private var jobReconnect: Job? = null
     private var networkObserver: UnderlyingNetworkObserver? = null
     private var jobNotification: Job? = null
+    private var lastUiState = STATE_DISCONNECTED
 
     // Пауза перед попыткой переподключения, в секундах. Дальше последнего элемента
     // не растёт: сервер может быть недоступен часами, а телефон должен подхватить
@@ -102,9 +106,30 @@ internal class SstpVpnService : VpnService() {
     // ROOT_STATE отвечает только на вопрос «сервис жив» — на нём висит плитка в
     // шторке. Экрану нужна градация, поэтому состояние публикуется отдельно.
     private fun setUiState(state: String) {
+        val previous = lastUiState
+        lastUiState = state
+
         setStringPrefValue(state, OscPrefKey.HOME_STATE, prefs)
 
         updateOngoingNotification(state)
+
+        if (state == STATE_CONNECTED && previous != STATE_CONNECTED) {
+            vibrateConnected()
+        }
+    }
+
+    /** Двойной короткий отклик: туннель поднялся. */
+    private fun vibrateConnected() {
+        val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            getSystemService(VibratorManager::class.java)?.defaultVibrator
+        } else {
+            @Suppress("DEPRECATION")
+            getSystemService(Vibrator::class.java)
+        }
+
+        if (vibrator?.hasVibrator() != true) return
+
+        vibrator.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 25, 90, 25), -1))
     }
 
     private fun requestTileListening() {

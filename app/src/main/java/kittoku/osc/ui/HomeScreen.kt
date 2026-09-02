@@ -46,9 +46,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import android.view.HapticFeedbackConstants
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -211,9 +213,14 @@ private fun Hero(
         Spacer(modifier = Modifier.height(20.dp))
 
         val isActive = isConnected || isBusy
+        val view = LocalView.current
 
         Button(
-            onClick = if (isActive) onDisconnect else onConnect,
+            onClick = {
+                view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+
+                if (isActive) onDisconnect() else onConnect()
+            },
             shape = CircleShape,
             colors = ButtonDefaults.buttonColors(
                 containerColor = if (isActive) {
